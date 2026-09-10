@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --background: 236 31% 9%;
+  --foreground: 43 38% 94%;
+  --border: 235 17% 22%;
+  --card: 237 29% 13%;
+  --card-foreground: 43 38% 94%;
+  --card-border: 235 17% 23%;
+  --sidebar: 237 31% 8%;
+  --sidebar-foreground: 43 38% 94%;
+  --sidebar-border: 235 17% 20%;
+  --sidebar-primary: 45 96% 65%;
+  --sidebar-primary-foreground: 238 30% 10%;
+  --sidebar-accent: 236 23% 16%;
+  --sidebar-accent-foreground: 43 38% 94%;
+  --sidebar-ring: 45 96% 65%;
+  --popover: 237 29% 14%;
+  --popover-foreground: 43 38% 94%;
+  --popover-border: 235 17% 23%;
+  --primary: 45 96% 65%;
+  --primary-foreground: 238 30% 10%;
+  --secondary: 192 82% 70%;
+  --secondary-foreground: 238 30% 10%;
+  --muted: 237 20% 18%;
+  --muted-foreground: 236 13% 64%;
+  --accent: 334 77% 68%;
+  --accent-foreground: 238 30% 10%;
+  --destructive: 4 74% 62%;
+  --destructive-foreground: 43 38% 94%;
+  --input: 236 20% 19%;
+  --ring: 45 96% 65%;
+  --chart-1: 45 96% 65%;
+  --chart-2: 192 82% 70%;
+  --chart-3: 334 77% 68%;
+  --chart-4: 154 52% 62%;
+  --chart-5: 20 84% 67%;
+  --app-font-sans: 'DM Sans', sans-serif;
+  --app-font-serif: 'Space Grotesk', sans-serif;
+  --app-font-mono: 'DM Mono', monospace;
+  --radius: 1.15rem;
+  --button-outline: rgba(255,255,255,.1);
+  --badge-outline: rgba(255,255,255,.06);
+  --opaque-button-border-intensity: 12;
+  --elevate-1: rgba(255,255,255,.04);
+  --elevate-2: rgba(255,255,255,.08);
+  --tracking-normal: 0em;
+  --spacing: .25rem;
+  --primary-border: hsl(var(--primary));
+  --secondary-border: hsl(var(--secondary));
+  --muted-border: hsl(var(--muted));
+  --accent-border: hsl(var(--accent));
+  --destructive-border: hsl(var(--destructive));
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { background: hsl(var(--background)); }
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    min-width: 320px;
+  }
+  button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+}
+
+@layer utilities {
+  .font-display { font-family: var(--app-font-serif); }
+  .font-mono-pulse { font-family: var(--app-font-mono); }
+  .pulse-grid {
+    background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .text-balance { text-wrap: balance; }
+  .glass { background: rgba(25,25,41,.72); backdrop-filter: blur(18px); }
+  .focus-ring:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
+}
+
+* { scrollbar-width: thin; scrollbar-color: hsl(var(--muted)) transparent; }
+::selection { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+
+.noise::after {
+  content: '';
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: .025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+}
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes drift { from { transform: translate3d(-2%, 0, 0) scale(1); } to { transform: translate3d(2%, 2%, 0) scale(1.04); } }
+@keyframes pulse-line { 0%, 100% { transform: scaleX(.82); opacity: .5; } 50% { transform: scaleX(1); opacity: 1; } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.animate-rise { animation: rise-in .7s cubic-bezier(.2,.75,.2,1) both; }
+.animate-rise-delay-1 { animation-delay: .1s; }
+.animate-rise-delay-2 { animation-delay: .2s; }
+.animate-rise-delay-3 { animation-delay: .3s; }
+.animate-drift { animation: drift 12s ease-in-out infinite alternate; }
+.skeleton { background: linear-gradient(90deg, hsl(var(--muted)) 20%, hsl(var(--card)) 45%, hsl(var(--muted)) 70%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+.pulse-line { animation: pulse-line 2.4s ease-in-out infinite; transform-origin: left center; }
+
+.clerk-wrap .cl-rootBox { width: 100%; }

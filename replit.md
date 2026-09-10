@@ -1,6 +1,6 @@
-# [Project name]
+# PULSE Dating
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+PULSE is a mobile-first worldwide dating app where adults build future-oriented profiles through Vibe DNA onboarding.
 
 ## Run & Operate
 
@@ -22,15 +22,26 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/pulse-dating` — responsive React/Vite app with Clerk auth, onboarding, profile editing, and settings.
+- `artifacts/api-server/src/routes/pulse.ts` — authenticated Phase 1 profile, Vibe DNA, preferences, settings, and onboarding APIs.
+- `lib/db/src/schema/pulse.ts` — PostgreSQL schema for private account data, public profile data, preferences, settings, onboarding, media, and Phase 2 relationship architecture.
+- `lib/api-spec/openapi.yaml` — source of truth for the API contract.
+- `artifacts/pulse-dating/src/index.css` — PULSE visual system and responsive theme.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Clerk owns signup, login, email verification, Google sign-in, and browser session cookies; the API derives identity from Clerk and never accepts a client-supplied user ID.
+- Public profile responses contain only dating-profile fields; exact birth date and voice media path are returned only to the signed-in owner edit view.
+- User media uses App Storage presigned uploads; PostgreSQL stores object paths and metadata rather than file bytes.
+- Phase 2 relationship entities are represented in the database schema but have no user-facing routes in Phase 1.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Public landing page with responsive mobile-first presentation.
+- Branded Clerk sign-in/sign-up screens with an 18+ message and Google-ready social sign-in.
+- Eight-step Vibe DNA onboarding with persistent progress.
+- Profile creation/editing for About Me, Future Goals, hobbies, lifestyle, languages, photos/videos, and separate Voice Vibe media.
+- Settings for discovery visibility, privacy controls, saved discovery preferences, logout, notification placeholder, and deletion request placeholder.
 
 ## User preferences
 
@@ -38,7 +49,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- API changes must start in `lib/api-spec/openapi.yaml`, then run `pnpm --filter @workspace/api-spec run codegen` before updating routes or the frontend.
+- Web Clerk auth uses same-origin session cookies; do not add bearer token handling to the web client.
 
 ## Pointers
 

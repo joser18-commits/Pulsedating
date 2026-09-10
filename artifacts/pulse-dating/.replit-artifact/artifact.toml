@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "PULSE Dating"
+description = "A mobile-first worldwide dating app where people build honest, future-oriented profiles through Vibe DNA onboarding and discover connection with privacy-first controls."
+version = "1.0.0"
+id = "artifacts/pulse-dating"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20471
+
+[services.development]
+run = "pnpm --filter @workspace/pulse-dating run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pulse-dating", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/pulse-dating/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20471"
+BASE_PATH = "/"

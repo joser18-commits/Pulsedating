@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: profile
+    description: Authenticated profile and onboarding operations
+  - name: settings
+    description: Authenticated account and privacy settings
+  - name: storage
+    description: Authenticated profile media uploads
 paths:
   /healthz:
     get:
@@ -24,7 +30,216 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /me/summary:
+    get:
+      operationId: getMySummary
+      tags: [profile]
+      summary: Get the signed-in user's app summary
+      responses:
+        "200":
+          description: Profile and onboarding summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /me/profile:
+    get:
+      operationId: getMyProfile
+      tags: [profile]
+      summary: Get the signed-in user's private edit view
+      responses:
+        "200":
+          description: Profile edit view
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      operationId: updateMyProfile
+      tags: [profile]
+      summary: Create or update the signed-in user's dating profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileInput"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /me/vibe-dna:
+    get:
+      operationId: getMyVibeDna
+      tags: [profile]
+      summary: Get the signed-in user's Vibe DNA
+      responses:
+        "200":
+          description: Vibe DNA answers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VibeDna"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      operationId: updateMyVibeDna
+      tags: [profile]
+      summary: Save the signed-in user's Vibe DNA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VibeDnaInput"
+      responses:
+        "200":
+          description: Updated Vibe DNA
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VibeDna"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /me/preferences:
+    get:
+      operationId: getMyPreferences
+      tags: [profile]
+      summary: Get the signed-in user's discovery preferences
+      responses:
+        "200":
+          description: Discovery preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      operationId: updateMyPreferences
+      tags: [profile]
+      summary: Save the signed-in user's discovery preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreferencesInput"
+      responses:
+        "200":
+          description: Updated discovery preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /me/settings:
+    get:
+      operationId: getMySettings
+      tags: [settings]
+      summary: Get the signed-in user's app settings
+      responses:
+        "200":
+          description: Account and privacy settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      operationId: updateMySettings
+      tags: [settings]
+      summary: Save the signed-in user's app settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsInput"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /me/onboarding:
+    put:
+      operationId: updateOnboardingProgress
+      tags: [profile]
+      summary: Save onboarding progress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingProgressInput"
+      responses:
+        "200":
+          description: Updated onboarding progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingProgress"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a private upload URL for profile media
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadInput"
+      responses:
+        "200":
+          description: Presigned upload details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 components:
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +248,329 @@ components:
           type: string
       required:
         - status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    ProfileSummary:
+      type: object
+      properties:
+        profileCompletion:
+          type: integer
+        onboardingComplete:
+          type: boolean
+        profile:
+          allOf:
+            - $ref: "#/components/schemas/PublicProfile"
+          nullable: true
+        locationLabel:
+          type: ["string", "null"]
+      required: [profileCompletion, onboardingComplete, profile, locationLabel]
+    PublicProfile:
+      type: object
+      properties:
+        userId:
+          type: string
+        firstName:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: ["string", "null"]
+        heightCm:
+          type: ["integer", "null"]
+        country:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        languages:
+          type: array
+          items:
+            type: string
+        relationshipIntention:
+          type: ["string", "null"]
+        aboutMe:
+          type: ["string", "null"]
+        hobbies:
+          type: array
+          items:
+            type: string
+        lifestyle:
+          type: ["string", "null"]
+        familyGoals:
+          type: ["string", "null"]
+        futureGoals:
+          $ref: "#/components/schemas/FutureGoals"
+        media:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileMedia"
+      required: [userId, firstName, age, languages, hobbies, futureGoals, media]
+    Profile:
+      allOf:
+        - $ref: "#/components/schemas/PublicProfile"
+        - type: object
+          properties:
+            voiceVibePath:
+              type: ["string", "null"]
+            exactBirthDate:
+              type: ["string", "null"]
+          required: [voiceVibePath, exactBirthDate]
+    ProfileInput:
+      type: object
+      required: [firstName, age]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 40
+        age:
+          type: integer
+          minimum: 18
+          maximum: 120
+        gender:
+          type: ["string", "null"]
+        heightCm:
+          type: ["integer", "null"]
+        country:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        languages:
+          type: array
+          items:
+            type: string
+        relationshipIntention:
+          type: ["string", "null"]
+        aboutMe:
+          type: ["string", "null"]
+        hobbies:
+          type: array
+          items:
+            type: string
+        lifestyle:
+          type: ["string", "null"]
+        familyGoals:
+          type: ["string", "null"]
+        futureGoals:
+          $ref: "#/components/schemas/FutureGoals"
+        media:
+          type: array
+          maxItems: 7
+          items:
+            $ref: "#/components/schemas/ProfileMedia"
+        voiceVibePath:
+          type: ["string", "null"]
+    FutureGoals:
+      type: object
+      properties:
+        fiveYearVision:
+          type: ["string", "null"]
+        marriage:
+          type: ["string", "null"]
+        children:
+          type: ["string", "null"]
+        homeOwnership:
+          type: ["string", "null"]
+        career:
+          type: ["string", "null"]
+        business:
+          type: ["string", "null"]
+        financialFreedom:
+          type: ["string", "null"]
+        travel:
+          type: ["string", "null"]
+        education:
+          type: ["string", "null"]
+        relocation:
+          type: ["string", "null"]
+        wouldRelocate:
+          type: ["string", "null"]
+    ProfileMedia:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [photo, video]
+        path:
+          type: string
+        alt:
+          type: ["string", "null"]
+        sortOrder:
+          type: integer
+      required: [id, kind, path, sortOrder]
+    VibeDna:
+      type: object
+      properties:
+        datingIntention:
+          type: ["string", "null"]
+        personality:
+          type: array
+          items:
+            type: string
+        communicationStyle:
+          type: ["string", "null"]
+        relationshipGoals:
+          type: array
+          items:
+            type: string
+        lifestyle:
+          type: array
+          items:
+            type: string
+        interests:
+          type: array
+          items:
+            type: string
+        familyGoals:
+          type: ["string", "null"]
+        lookingFor:
+          type: array
+          items:
+            type: string
+      required: [personality, relationshipGoals, lifestyle, interests, lookingFor]
+    VibeDnaInput:
+      type: object
+      properties:
+        datingIntention:
+          type: ["string", "null"]
+        personality:
+          type: array
+          items:
+            type: string
+        communicationStyle:
+          type: ["string", "null"]
+        relationshipGoals:
+          type: array
+          items:
+            type: string
+        lifestyle:
+          type: array
+          items:
+            type: string
+        interests:
+          type: array
+          items:
+            type: string
+        familyGoals:
+          type: ["string", "null"]
+        lookingFor:
+          type: array
+          items:
+            type: string
+    Preferences:
+      type: object
+      properties:
+        ageMin:
+          type: integer
+        ageMax:
+          type: integer
+        maxDistanceMiles:
+          type: integer
+        country:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        criteria:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [required, preferred, doesnt_matter]
+      required: [ageMin, ageMax, maxDistanceMiles, criteria]
+    PreferencesInput:
+      type: object
+      properties:
+        ageMin:
+          type: integer
+        ageMax:
+          type: integer
+        maxDistanceMiles:
+          type: integer
+        country:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        criteria:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [required, preferred, doesnt_matter]
+    Settings:
+      type: object
+      properties:
+        discoverable:
+          type: boolean
+        showAge:
+          type: boolean
+        showRegion:
+          type: boolean
+        notificationsEnabled:
+          type: boolean
+        deleteRequested:
+          type: boolean
+      required: [discoverable, showAge, showRegion, notificationsEnabled, deleteRequested]
+    SettingsInput:
+      type: object
+      properties:
+        discoverable:
+          type: boolean
+        showAge:
+          type: boolean
+        showRegion:
+          type: boolean
+        notificationsEnabled:
+          type: boolean
+        deleteRequested:
+          type: boolean
+    OnboardingProgress:
+      type: object
+      properties:
+        currentStep:
+          type: integer
+        completedSteps:
+          type: array
+          items:
+            type: string
+        complete:
+          type: boolean
+      required: [currentStep, completedSteps, complete]
+    OnboardingProgressInput:
+      type: object
+      required: [currentStep, completedSteps, complete]
+      properties:
+        currentStep:
+          type: integer
+          minimum: 0
+        completedSteps:
+          type: array
+          items:
+            type: string
+        complete:
+          type: boolean
+    UploadInput:
+      type: object
+      required: [name, size, contentType, mediaKind]
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+          minimum: 1
+        contentType:
+          type: string
+        mediaKind:
+          type: string
+          enum: [photo, video, voice]
+    UploadResponse:
+      type: object
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+      required: [uploadURL, objectPath]
 
