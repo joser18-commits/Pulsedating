@@ -37,6 +37,8 @@ export const GetMySummaryResponse = zod.object({
   "hobbies": zod.array(zod.string()),
   "lifestyle": zod.string().nullish(),
   "familyGoals": zod.string().nullish(),
+  "smoking": zod.string().nullish(),
+  "drinking": zod.string().nullish(),
   "futureGoals": zod.object({
   "fiveYearVision": zod.string().nullish(),
   "marriage": zod.string().nullish(),
@@ -79,6 +81,8 @@ export const GetMyProfileResponse = zod.object({
   "hobbies": zod.array(zod.string()),
   "lifestyle": zod.string().nullish(),
   "familyGoals": zod.string().nullish(),
+  "smoking": zod.string().nullish(),
+  "drinking": zod.string().nullish(),
   "futureGoals": zod.object({
   "fiveYearVision": zod.string().nullish(),
   "marriage": zod.string().nullish(),
@@ -130,6 +134,8 @@ export const UpdateMyProfileBody = zod.object({
   "hobbies": zod.array(zod.string()).optional(),
   "lifestyle": zod.string().nullish(),
   "familyGoals": zod.string().nullish(),
+  "smoking": zod.string().nullish(),
+  "drinking": zod.string().nullish(),
   "futureGoals": zod.object({
   "fiveYearVision": zod.string().nullish(),
   "marriage": zod.string().nullish(),
@@ -167,6 +173,8 @@ export const UpdateMyProfileResponse = zod.object({
   "hobbies": zod.array(zod.string()),
   "lifestyle": zod.string().nullish(),
   "familyGoals": zod.string().nullish(),
+  "smoking": zod.string().nullish(),
+  "drinking": zod.string().nullish(),
   "futureGoals": zod.object({
   "fiveYearVision": zod.string().nullish(),
   "marriage": zod.string().nullish(),
@@ -277,6 +285,7 @@ export const GetMySettingsResponse = zod.object({
   "showAge": zod.boolean(),
   "showRegion": zod.boolean(),
   "notificationsEnabled": zod.boolean(),
+  "commentPermission": zod.enum(['eligible', 'verified', 'liked', 'matches', 'nobody']),
   "deleteRequested": zod.boolean()
 })
 
@@ -289,6 +298,7 @@ export const UpdateMySettingsBody = zod.object({
   "showAge": zod.boolean().optional(),
   "showRegion": zod.boolean().optional(),
   "notificationsEnabled": zod.boolean().optional(),
+  "commentPermission": zod.enum(['eligible', 'verified', 'liked', 'matches', 'nobody']).optional(),
   "deleteRequested": zod.boolean().optional()
 })
 
@@ -297,6 +307,7 @@ export const UpdateMySettingsResponse = zod.object({
   "showAge": zod.boolean(),
   "showRegion": zod.boolean(),
   "notificationsEnabled": zod.boolean(),
+  "commentPermission": zod.enum(['eligible', 'verified', 'liked', 'matches', 'nobody']),
   "deleteRequested": zod.boolean()
 })
 
@@ -338,5 +349,251 @@ export const RequestUploadUrlResponse = zod.object({
   "uploadURL": zod.string(),
   "objectPath": zod.string()
 })
+
+
+/**
+ * @summary Discover profiles using the signed-in user's preferences
+ */
+export const GetDiscoveryBody = zod.object({
+  "mode": zod.enum(['nearby', 'global', 'right-now']),
+  "gender": zod.string().nullish(),
+  "ageMin": zod.number().int().nullish(),
+  "ageMax": zod.number().int().nullish(),
+  "distanceMiles": zod.number().int().nullish(),
+  "city": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "worldwide": zod.boolean().optional(),
+  "relationshipIntention": zod.string().nullish(),
+  "language": zod.string().nullish(),
+  "children": zod.string().nullish(),
+  "smoking": zod.string().nullish(),
+  "drinking": zod.string().nullish(),
+  "interests": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "newUsers": zod.boolean(),
+  "onlineOnly": zod.boolean(),
+  "hasVideo": zod.boolean(),
+  "hasVoiceVibe": zod.boolean(),
+  "criteria": zod.record(zod.string(), zod.enum(['required', 'preferred', 'doesnt_matter']))
+})
+
+export const GetDiscoveryResponse = zod.object({
+  "mode": zod.string(),
+  "profiles": zod.array(zod.object({
+  "userId": zod.string(),
+  "firstName": zod.string(),
+  "age": zod.number().int(),
+  "gender": zod.string().nullish(),
+  "heightCm": zod.number().int().nullish(),
+  "country": zod.string().nullish(),
+  "region": zod.string().nullish(),
+  "languages": zod.array(zod.string()),
+  "relationshipIntention": zod.string().nullish(),
+  "aboutMe": zod.string().nullish(),
+  "hobbies": zod.array(zod.string()),
+  "lifestyle": zod.string().nullish(),
+  "familyGoals": zod.string().nullish(),
+  "smoking": zod.string().nullish(),
+  "drinking": zod.string().nullish(),
+  "futureGoals": zod.object({
+  "fiveYearVision": zod.string().nullish(),
+  "marriage": zod.string().nullish(),
+  "children": zod.string().nullish(),
+  "homeOwnership": zod.string().nullish(),
+  "career": zod.string().nullish(),
+  "business": zod.string().nullish(),
+  "financialFreedom": zod.string().nullish(),
+  "travel": zod.string().nullish(),
+  "education": zod.string().nullish(),
+  "relocation": zod.string().nullish(),
+  "wouldRelocate": zod.string().nullish()
+}),
+  "media": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.enum(['photo', 'video']),
+  "path": zod.string(),
+  "alt": zod.string().nullish(),
+  "sortOrder": zod.number().int()
+}))
+}).and(zod.object({
+  "compatibility": zod.number().int(),
+  "compatibilityReasons": zod.array(zod.string()),
+  "badges": zod.array(zod.string()),
+  "isOnline": zod.boolean(),
+  "isRecentlyActive": zod.boolean(),
+  "likedByMe": zod.boolean(),
+  "mediaLikedByMe": zod.array(zod.string())
+}))),
+  "heartAllowance": zod.object({
+  "remaining": zod.number().int(),
+  "limit": zod.number().int(),
+  "refillAt": zod.coerce.date()
+})
+})
+
+
+/**
+ * @summary Send a Heart or Super Pulse to a profile
+ */
+export const SendHeartBody = zod.object({
+  "toUserId": zod.string(),
+  "kind": zod.enum(['heart', 'super_pulse'])
+})
+
+export const SendHeartResponse = zod.object({
+  "heartId": zod.string().nullable(),
+  "kind": zod.string(),
+  "remaining": zod.number().int(),
+  "limit": zod.number().int(),
+  "refillAt": zod.coerce.date(),
+  "matched": zod.boolean(),
+  "match": zod.object({
+  "id": zod.string(),
+  "userId": zod.string(),
+  "firstName": zod.string(),
+  "age": zod.number().int(),
+  "region": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}).nullable()
+})
+
+
+/**
+ * @summary Get persisted matches for the signed-in user
+ */
+export const GetMyMatchesResponse = zod.object({
+  "matches": zod.array(zod.object({
+  "id": zod.string(),
+  "userId": zod.string(),
+  "firstName": zod.string(),
+  "age": zod.number().int(),
+  "region": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Get the real number of people who liked the signed-in user
+ */
+export const GetMyLikesResponse = zod.object({
+  "count": zod.number().int(),
+  "previews": zod.array(zod.object({
+  "userId": zod.string(),
+  "firstInitial": zod.string(),
+  "photoPath": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "blurred": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Like, Super Pulse, or react to profile media
+ */
+export const InteractWithMediaParams = zod.object({
+  "mediaId": zod.coerce.string()
+})
+
+export const InteractWithMediaBody = zod.object({
+  "kind": zod.enum(['like', 'super_pulse', 'reaction']),
+  "reaction": zod.union([zod.literal('like'),zod.literal('heart_eyes'),zod.literal('laugh'),zod.literal('fire'),zod.literal('clap'),zod.literal('wow'),zod.literal(null)]).nullish()
+})
+
+export const InteractWithMediaResponse = zod.object({
+  "mediaId": zod.string(),
+  "kind": zod.string(),
+  "reaction": zod.string().nullable(),
+  "active": zod.boolean()
+})
+
+
+/**
+ * @summary Get visible comments for profile media
+ */
+export const GetMediaCommentsParams = zod.object({
+  "mediaId": zod.coerce.string()
+})
+
+export const GetMediaCommentsResponse = zod.object({
+  "comments": zod.array(zod.object({
+  "id": zod.string(),
+  "mediaId": zod.string(),
+  "userId": zod.string(),
+  "authorName": zod.string(),
+  "body": zod.string(),
+  "replyToId": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "canLikeBack": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Comment on profile media when allowed
+ */
+export const CreateMediaCommentParams = zod.object({
+  "mediaId": zod.coerce.string()
+})
+
+export const createMediaCommentBodyBodyMax = 500;
+
+
+
+export const CreateMediaCommentBody = zod.object({
+  "body": zod.string().min(1).max(createMediaCommentBodyBodyMax),
+  "replyToId": zod.string().nullish()
+})
+
+export const CreateMediaCommentResponse = zod.object({
+  "id": zod.string(),
+  "mediaId": zod.string(),
+  "userId": zod.string(),
+  "authorName": zod.string(),
+  "body": zod.string(),
+  "replyToId": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "canLikeBack": zod.boolean()
+})
+
+
+/**
+ * @summary Like back, reply to, or ignore a media comment
+ */
+export const ActOnCommentParams = zod.object({
+  "commentId": zod.coerce.string()
+})
+
+export const ActOnCommentBody = zod.object({
+  "action": zod.enum(['like_back', 'ignore', 'reply']),
+  "body": zod.string().nullish()
+})
+
+export const ActOnCommentResponse = zod.object({
+  "comment": zod.object({
+  "id": zod.string(),
+  "mediaId": zod.string(),
+  "userId": zod.string(),
+  "authorName": zod.string(),
+  "body": zod.string(),
+  "replyToId": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "canLikeBack": zod.boolean()
+}),
+  "matched": zod.boolean()
+})
+
+
+/**
+ * @summary Stream profile media only when the profile is viewable
+ */
+export const GetDiscoveryMediaParams = zod.object({
+  "profileId": zod.coerce.string(),
+  "mediaId": zod.coerce.string()
+})
+
+export const GetDiscoveryMediaResponse = zod.unknown()
 
 

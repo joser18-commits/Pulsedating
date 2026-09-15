@@ -5,11 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { SettingsCommentPermission } from './settingsCommentPermission';
 
 export interface Settings {
   discoverable: boolean;
   showAge: boolean;
   showRegion: boolean;
   notificationsEnabled: boolean;
+  commentPermission: SettingsCommentPermission;
   deleteRequested: boolean;
 }

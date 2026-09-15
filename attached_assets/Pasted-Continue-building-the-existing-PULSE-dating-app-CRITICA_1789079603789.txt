@@ -1,0 +1,191 @@
+Continue building the existing PULSE dating app.
+
+CRITICAL RULE: Never remove, simplify, replace, disable, or break anything already working. Extend the existing Phase 1 architecture and preserve all existing user/profile data.
+
+Build ONLY PHASE 2: Discovery + Matching.
+
+BRAND COPY FIX
+
+PULSE is NOT only for serious relationships. It supports:
+
+* Serious relationships
+* Dating
+* Casual dating / hookups
+* Friendship
+* Travel connections
+* Networking
+* Meeting/chatting with new people
+
+Replace wording such as “people building toward something real” and “Built for something real” with inclusive wording. Do NOT redesign the landing page yet.
+
+1. DISCOVER
+
+Create the main mobile Discover experience.
+
+Modes:
+Nearby | Global | Right Now
+
+Right Now can remain a placeholder for a later phase.
+
+Profile cards should show:
+
+* clear main photo
+* first name + age
+* city/general region + country
+* relationship intention
+* languages
+* compatibility %
+* Online/Recently Active
+* verification badge when applicable
+* ❤️ Heart
+* 💜 Super Pulse
+* View Profile
+
+Never expose exact address/GPS.
+
+2. FILTERS
+
+Add:
+
+* gender
+* age
+* distance
+* city/country
+* worldwide
+* relationship intention
+* language
+* children/wants children
+* smoking/drinking
+* interests
+* verified
+* new users
+* online/recently active
+* has video
+* has Voice Vibe
+
+Support:
+Strict = requirement
+Prefer = ranking preference
+
+Use existing Phase 1 preferences/Vibe DNA.
+
+3. COMPATIBILITY
+
+Calculate compatibility using existing user data:
+
+* Vibe
+* relationship goals
+* lifestyle
+* communication
+* interests
+* family goals
+* Future Goals
+
+Show overall compatibility plus:
+
+Why PULSE matched you
+
+Only show genuine reasons supported by both profiles.
+
+4. HEARTS + MATCHING
+
+Free users receive 10 Hearts every 24 hours. Make the amount configurable.
+
+Show remaining Hearts and refill countdown.
+
+When A Hearts B and B Hearts A, create a persisted match.
+
+Display:
+
+IT’S A PULSE ❤️
+You felt it. They did too.
+
+Buttons:
+
+* View Profile
+* Send Message (messaging comes Phase 3)
+* Icebreaker (placeholder)
+
+Add 💜 Super Pulse architecture but NO purchasing yet.
+
+5. PROFILE MEDIA INTERACTIONS
+
+Photos AND videos should support:
+
+* ❤️ Like
+* 💜 Super Pulse
+* ❤️ 😍 😂 🔥 👏 🤯 reactions
+* 💬 Comments
+
+Persist interactions.
+
+Allow profile owners to choose who may comment:
+
+* Eligible users
+* Verified only
+* People I liked
+* Matches only
+* Nobody
+
+Do not show public popularity counts by default.
+
+Add basic moderation to block clearly threatening, hateful, harassing, or sexually aggressive comments.
+
+6. COMMENT → CONNECTION
+
+When someone comments on media, profile owner can:
+
+* Like Back
+* Reply
+* Ignore
+
+Like Back can create a match when appropriate.
+
+7. WHO LIKED ME
+
+Create the foundation showing the real number of people who liked the user.
+
+Free users see blurred previews.
+
+No ads/payments yet.
+
+Never generate fake likes, fake matches, fake profiles, or fake activity.
+
+8. BADGES
+
+Support where data exists:
+🆕 New Here
+✓ Real Person Verified
+🛡️ Identity Verified
+🟢 Online
+⚡ Recently Active
+🎥 Video
+🎙️ Voice Vibe
+🌎 Exploring Globally
+
+9. TEST
+
+Test with at least two development accounts:
+
+A discovers B → A Hearts B → B Hearts A → match created → both see match.
+
+Also verify:
+
+* Heart limit/refill
+* filters
+* compatibility
+* photo/video likes
+* comments
+* database persistence
+* privacy rules
+
+Do NOT build messaging, calls, Blind Spark, Travel Mode, payments, subscriptions, Coins, rewarded ads, or advanced features yet.
+
+At completion, briefly report:
+
+1. What was built
+2. Database changes
+3. How I can test Phase 2
+4. Any limitations/errors
+
+Then STOP. Do not begin Phase 3.

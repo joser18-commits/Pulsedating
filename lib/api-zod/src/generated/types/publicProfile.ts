@@ -30,6 +30,10 @@ export interface PublicProfile {
   lifestyle?: string | null;
   /** @nullable */
   familyGoals?: string | null;
+  /** @nullable */
+  smoking?: string | null;
+  /** @nullable */
+  drinking?: string | null;
   futureGoals: FutureGoals;
   media: ProfileMedia[];
 }

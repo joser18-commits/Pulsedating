@@ -21,7 +21,22 @@ import type {
 
 import type {
   BadRequestResponse,
+  CommentActionInput,
+  CommentActionResponse,
+  DiscoverFilters,
+  DiscoveryResponse,
+  ForbiddenResponse,
+  GetMediaComments200,
+  GetMyMatches200,
   HealthStatus,
+  HeartInput,
+  HeartResponse,
+  LikesReceived,
+  MediaComment,
+  MediaCommentInput,
+  MediaInteractionInput,
+  MediaInteractionResponse,
+  NotFoundResponse,
   OnboardingProgress,
   OnboardingProgressInput,
   Preferences,
@@ -953,4 +968,675 @@ export const useRequestUploadUrl = <TError = ErrorType<BadRequestResponse | Unau
       > => {
       return useMutation(getRequestUploadUrlMutationOptions(options));
     }
+
+export const getGetDiscoveryUrl = () => {
+
+
+
+
+  return `/api/discover`
+}
+
+/**
+ * @summary Discover profiles using the signed-in user's preferences
+ */
+export const getDiscovery = async (discoverFilters: DiscoverFilters, options?: Parameters<typeof customFetch>[1]): Promise<DiscoveryResponse> => {
+
+  return customFetch<DiscoveryResponse>(getGetDiscoveryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(discoverFilters)
+  }
+);}
+
+
+
+
+
+export const getGetDiscoveryMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getDiscovery>>, TError,{data: BodyType<DiscoverFilters>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getDiscovery>>, TError,{data: BodyType<DiscoverFilters>}, TContext> => {
+
+const mutationKey = ['getDiscovery'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getDiscovery>>, {data: BodyType<DiscoverFilters>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  getDiscovery(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetDiscoveryMutationResult = NonNullable<Awaited<ReturnType<typeof getDiscovery>>>
+    export type GetDiscoveryMutationBody = BodyType<DiscoverFilters>
+    export type GetDiscoveryMutationError = ErrorType<UnauthorizedResponse>
+
+    /**
+ * @summary Discover profiles using the signed-in user's preferences
+ */
+export const useGetDiscovery = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getDiscovery>>, TError,{data: BodyType<DiscoverFilters>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof getDiscovery>>,
+        TError,
+        {data: BodyType<DiscoverFilters>},
+        TContext
+      > => {
+      return useMutation(getGetDiscoveryMutationOptions(options));
+    }
+
+export const getSendHeartUrl = () => {
+
+
+
+
+  return `/api/discover/heart`
+}
+
+/**
+ * @summary Send a Heart or Super Pulse to a profile
+ */
+export const sendHeart = async (heartInput: HeartInput, options?: Parameters<typeof customFetch>[1]): Promise<HeartResponse> => {
+
+  return customFetch<HeartResponse>(getSendHeartUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(heartInput)
+  }
+);}
+
+
+
+
+
+export const getSendHeartMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | HeartResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendHeart>>, TError,{data: BodyType<HeartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendHeart>>, TError,{data: BodyType<HeartInput>}, TContext> => {
+
+const mutationKey = ['sendHeart'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendHeart>>, {data: BodyType<HeartInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sendHeart(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendHeartMutationResult = NonNullable<Awaited<ReturnType<typeof sendHeart>>>
+    export type SendHeartMutationBody = BodyType<HeartInput>
+    export type SendHeartMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | HeartResponse>
+
+    /**
+ * @summary Send a Heart or Super Pulse to a profile
+ */
+export const useSendHeart = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | HeartResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendHeart>>, TError,{data: BodyType<HeartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendHeart>>,
+        TError,
+        {data: BodyType<HeartInput>},
+        TContext
+      > => {
+      return useMutation(getSendHeartMutationOptions(options));
+    }
+
+export const getGetMyMatchesUrl = () => {
+
+
+
+
+  return `/api/me/matches`
+}
+
+/**
+ * @summary Get persisted matches for the signed-in user
+ */
+export const getMyMatches = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetMyMatches200> => {
+
+  return customFetch<GetMyMatches200>(getGetMyMatchesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyMatchesQueryKey = () => {
+    return [
+    `/api/me/matches`
+    ] as const;
+    }
+
+
+export const getGetMyMatchesQueryOptions = <TData = Awaited<ReturnType<typeof getMyMatches>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyMatches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyMatchesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyMatches>>> = ({ signal }) => getMyMatches({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyMatches>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyMatchesQueryResult = NonNullable<Awaited<ReturnType<typeof getMyMatches>>>
+export type GetMyMatchesQueryError = ErrorType<UnauthorizedResponse>
+
+
+/**
+ * @summary Get persisted matches for the signed-in user
+ */
+
+export function useGetMyMatches<TData = Awaited<ReturnType<typeof getMyMatches>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyMatches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyMatchesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetMyLikesUrl = () => {
+
+
+
+
+  return `/api/me/likes`
+}
+
+/**
+ * @summary Get the real number of people who liked the signed-in user
+ */
+export const getMyLikes = async ( options?: Parameters<typeof customFetch>[1]): Promise<LikesReceived> => {
+
+  return customFetch<LikesReceived>(getGetMyLikesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyLikesQueryKey = () => {
+    return [
+    `/api/me/likes`
+    ] as const;
+    }
+
+
+export const getGetMyLikesQueryOptions = <TData = Awaited<ReturnType<typeof getMyLikes>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyLikes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyLikesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyLikes>>> = ({ signal }) => getMyLikes({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyLikes>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyLikesQueryResult = NonNullable<Awaited<ReturnType<typeof getMyLikes>>>
+export type GetMyLikesQueryError = ErrorType<UnauthorizedResponse>
+
+
+/**
+ * @summary Get the real number of people who liked the signed-in user
+ */
+
+export function useGetMyLikes<TData = Awaited<ReturnType<typeof getMyLikes>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyLikes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyLikesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getInteractWithMediaUrl = (mediaId: string,) => {
+
+
+
+
+  return `/api/discover/media/${mediaId}/interaction`
+}
+
+/**
+ * @summary Like, Super Pulse, or react to profile media
+ */
+export const interactWithMedia = async (mediaId: string,
+    mediaInteractionInput: MediaInteractionInput, options?: Parameters<typeof customFetch>[1]): Promise<MediaInteractionResponse> => {
+
+  return customFetch<MediaInteractionResponse>(getInteractWithMediaUrl(mediaId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediaInteractionInput)
+  }
+);}
+
+
+
+
+
+export const getInteractWithMediaMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof interactWithMedia>>, TError,{mediaId: string;data: BodyType<MediaInteractionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof interactWithMedia>>, TError,{mediaId: string;data: BodyType<MediaInteractionInput>}, TContext> => {
+
+const mutationKey = ['interactWithMedia'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof interactWithMedia>>, {mediaId: string;data: BodyType<MediaInteractionInput>}> = (props) => {
+          const {mediaId,data} = props ?? {};
+
+          return  interactWithMedia(mediaId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InteractWithMediaMutationResult = NonNullable<Awaited<ReturnType<typeof interactWithMedia>>>
+    export type InteractWithMediaMutationBody = BodyType<MediaInteractionInput>
+    export type InteractWithMediaMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>
+
+    /**
+ * @summary Like, Super Pulse, or react to profile media
+ */
+export const useInteractWithMedia = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof interactWithMedia>>, TError,{mediaId: string;data: BodyType<MediaInteractionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof interactWithMedia>>,
+        TError,
+        {mediaId: string;data: BodyType<MediaInteractionInput>},
+        TContext
+      > => {
+      return useMutation(getInteractWithMediaMutationOptions(options));
+    }
+
+export const getGetMediaCommentsUrl = (mediaId: string,) => {
+
+
+
+
+  return `/api/discover/media/${mediaId}/comments`
+}
+
+/**
+ * @summary Get visible comments for profile media
+ */
+export const getMediaComments = async (mediaId: string, options?: Parameters<typeof customFetch>[1]): Promise<GetMediaComments200> => {
+
+  return customFetch<GetMediaComments200>(getGetMediaCommentsUrl(mediaId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMediaCommentsQueryKey = (mediaId: string,) => {
+    return [
+    `/api/discover/media/${mediaId}/comments`
+    ] as const;
+    }
+
+
+export const getGetMediaCommentsQueryOptions = <TData = Awaited<ReturnType<typeof getMediaComments>>, TError = ErrorType<UnauthorizedResponse>>(mediaId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMediaComments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMediaCommentsQueryKey(mediaId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMediaComments>>> = ({ signal }) => getMediaComments(mediaId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: mediaId !== null && mediaId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMediaComments>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMediaCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof getMediaComments>>>
+export type GetMediaCommentsQueryError = ErrorType<UnauthorizedResponse>
+
+
+/**
+ * @summary Get visible comments for profile media
+ */
+
+export function useGetMediaComments<TData = Awaited<ReturnType<typeof getMediaComments>>, TError = ErrorType<UnauthorizedResponse>>(
+ mediaId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMediaComments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMediaCommentsQueryOptions(mediaId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateMediaCommentUrl = (mediaId: string,) => {
+
+
+
+
+  return `/api/discover/media/${mediaId}/comments`
+}
+
+/**
+ * @summary Comment on profile media when allowed
+ */
+export const createMediaComment = async (mediaId: string,
+    mediaCommentInput: MediaCommentInput, options?: Parameters<typeof customFetch>[1]): Promise<MediaComment> => {
+
+  return customFetch<MediaComment>(getCreateMediaCommentUrl(mediaId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediaCommentInput)
+  }
+);}
+
+
+
+
+
+export const getCreateMediaCommentMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMediaComment>>, TError,{mediaId: string;data: BodyType<MediaCommentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMediaComment>>, TError,{mediaId: string;data: BodyType<MediaCommentInput>}, TContext> => {
+
+const mutationKey = ['createMediaComment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMediaComment>>, {mediaId: string;data: BodyType<MediaCommentInput>}> = (props) => {
+          const {mediaId,data} = props ?? {};
+
+          return  createMediaComment(mediaId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMediaCommentMutationResult = NonNullable<Awaited<ReturnType<typeof createMediaComment>>>
+    export type CreateMediaCommentMutationBody = BodyType<MediaCommentInput>
+    export type CreateMediaCommentMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>
+
+    /**
+ * @summary Comment on profile media when allowed
+ */
+export const useCreateMediaComment = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMediaComment>>, TError,{mediaId: string;data: BodyType<MediaCommentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMediaComment>>,
+        TError,
+        {mediaId: string;data: BodyType<MediaCommentInput>},
+        TContext
+      > => {
+      return useMutation(getCreateMediaCommentMutationOptions(options));
+    }
+
+export const getActOnCommentUrl = (commentId: string,) => {
+
+
+
+
+  return `/api/discover/comments/${commentId}/action`
+}
+
+/**
+ * @summary Like back, reply to, or ignore a media comment
+ */
+export const actOnComment = async (commentId: string,
+    commentActionInput: CommentActionInput, options?: Parameters<typeof customFetch>[1]): Promise<CommentActionResponse> => {
+
+  return customFetch<CommentActionResponse>(getActOnCommentUrl(commentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(commentActionInput)
+  }
+);}
+
+
+
+
+
+export const getActOnCommentMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnComment>>, TError,{commentId: string;data: BodyType<CommentActionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actOnComment>>, TError,{commentId: string;data: BodyType<CommentActionInput>}, TContext> => {
+
+const mutationKey = ['actOnComment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actOnComment>>, {commentId: string;data: BodyType<CommentActionInput>}> = (props) => {
+          const {commentId,data} = props ?? {};
+
+          return  actOnComment(commentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActOnCommentMutationResult = NonNullable<Awaited<ReturnType<typeof actOnComment>>>
+    export type ActOnCommentMutationBody = BodyType<CommentActionInput>
+    export type ActOnCommentMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>
+
+    /**
+ * @summary Like back, reply to, or ignore a media comment
+ */
+export const useActOnComment = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnComment>>, TError,{commentId: string;data: BodyType<CommentActionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof actOnComment>>,
+        TError,
+        {commentId: string;data: BodyType<CommentActionInput>},
+        TContext
+      > => {
+      return useMutation(getActOnCommentMutationOptions(options));
+    }
+
+export const getGetDiscoveryMediaUrl = (profileId: string,
+    mediaId: string,) => {
+
+
+
+
+  return `/api/discover/media/${profileId}/${mediaId}`
+}
+
+/**
+ * @summary Stream profile media only when the profile is viewable
+ */
+export const getDiscoveryMedia = async (profileId: string,
+    mediaId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getGetDiscoveryMediaUrl(profileId,mediaId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDiscoveryMediaQueryKey = (profileId: string,
+    mediaId: string,) => {
+    return [
+    `/api/discover/media/${profileId}/${mediaId}`
+    ] as const;
+    }
+
+
+export const getGetDiscoveryMediaQueryOptions = <TData = Awaited<ReturnType<typeof getDiscoveryMedia>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>>(profileId: string,
+    mediaId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDiscoveryMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDiscoveryMediaQueryKey(profileId,mediaId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDiscoveryMedia>>> = ({ signal }) => getDiscoveryMedia(profileId,mediaId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: profileId !== null && profileId !== undefined && mediaId !== null && mediaId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDiscoveryMedia>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDiscoveryMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getDiscoveryMedia>>>
+export type GetDiscoveryMediaQueryError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>
+
+
+/**
+ * @summary Stream profile media only when the profile is viewable
+ */
+
+export function useGetDiscoveryMedia<TData = Awaited<ReturnType<typeof getDiscoveryMedia>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>>(
+ profileId: string,
+    mediaId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDiscoveryMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDiscoveryMediaQueryOptions(profileId,mediaId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

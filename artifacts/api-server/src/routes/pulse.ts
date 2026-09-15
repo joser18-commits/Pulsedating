@@ -62,6 +62,8 @@ function toPublicProfile(row: typeof pulseProfiles.$inferSelect) {
     hobbies: row.hobbies ?? [],
     lifestyle: row.lifestyle,
     familyGoals: row.familyGoals,
+    smoking: row.smoking,
+    drinking: row.drinking,
     futureGoals: row.futureGoals ?? emptyFutureGoals,
     media: row.media ?? [],
   };
@@ -151,6 +153,10 @@ router.put("/me/profile", async (req, res): Promise<void> => {
     })
     .returning();
   await ensureAccount(userId);
+  await db
+    .update(pulseAccounts)
+    .set({ ageVerified: data.age >= 18, updatedAt: new Date() })
+    .where(eq(pulseAccounts.clerkUserId, userId));
   res.json(UpdateMyProfileResponse.parse(toPrivateProfile(profile)));
 });
 
@@ -243,6 +249,7 @@ router.get("/me/settings", async (req, res): Promise<void> => {
     showAge: true,
     showRegion: true,
     notificationsEnabled: true,
+    commentPermission: "eligible",
     deleteRequested: false,
   };
   res.json(GetMySettingsResponse.parse(row));

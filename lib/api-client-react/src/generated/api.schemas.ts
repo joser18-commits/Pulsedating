@@ -77,6 +77,10 @@ export interface PublicProfile {
   lifestyle?: string | null;
   /** @nullable */
   familyGoals?: string | null;
+  /** @nullable */
+  smoking?: string | null;
+  /** @nullable */
+  drinking?: string | null;
   futureGoals: FutureGoals;
   media: ProfileMedia[];
 }
@@ -125,6 +129,10 @@ export interface ProfileInput {
   lifestyle?: string | null;
   /** @nullable */
   familyGoals?: string | null;
+  /** @nullable */
+  smoking?: string | null;
+  /** @nullable */
+  drinking?: string | null;
   futureGoals?: FutureGoals;
   /** @maxItems 7 */
   media?: ProfileMedia[];
@@ -186,19 +194,43 @@ export interface PreferencesInput {
   criteria?: PreferencesInputCriteria;
 }
 
+export type SettingsCommentPermission = typeof SettingsCommentPermission[keyof typeof SettingsCommentPermission];
+
+
+export const SettingsCommentPermission = {
+  eligible: 'eligible',
+  verified: 'verified',
+  liked: 'liked',
+  matches: 'matches',
+  nobody: 'nobody',
+} as const;
+
 export interface Settings {
   discoverable: boolean;
   showAge: boolean;
   showRegion: boolean;
   notificationsEnabled: boolean;
+  commentPermission: SettingsCommentPermission;
   deleteRequested: boolean;
 }
+
+export type SettingsInputCommentPermission = typeof SettingsInputCommentPermission[keyof typeof SettingsInputCommentPermission];
+
+
+export const SettingsInputCommentPermission = {
+  eligible: 'eligible',
+  verified: 'verified',
+  liked: 'liked',
+  matches: 'matches',
+  nobody: 'nobody',
+} as const;
 
 export interface SettingsInput {
   discoverable?: boolean;
   showAge?: boolean;
   showRegion?: boolean;
   notificationsEnabled?: boolean;
+  commentPermission?: SettingsInputCommentPermission;
   deleteRequested?: boolean;
 }
 
@@ -237,6 +269,203 @@ export interface UploadResponse {
   objectPath: string;
 }
 
+export type DiscoverFiltersMode = typeof DiscoverFiltersMode[keyof typeof DiscoverFiltersMode];
+
+
+export const DiscoverFiltersMode = {
+  nearby: 'nearby',
+  global: 'global',
+  'right-now': 'right-now',
+} as const;
+
+export type DiscoverFiltersCriteria = {[key: string]: 'required' | 'preferred' | 'doesnt_matter'};
+
+export interface DiscoverFilters {
+  mode: DiscoverFiltersMode;
+  /** @nullable */
+  gender?: string | null;
+  /** @nullable */
+  ageMin?: number | null;
+  /** @nullable */
+  ageMax?: number | null;
+  /** @nullable */
+  distanceMiles?: number | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  country?: string | null;
+  worldwide?: boolean;
+  /** @nullable */
+  relationshipIntention?: string | null;
+  /** @nullable */
+  language?: string | null;
+  /** @nullable */
+  children?: string | null;
+  /** @nullable */
+  smoking?: string | null;
+  /** @nullable */
+  drinking?: string | null;
+  interests: string[];
+  verified: boolean;
+  newUsers: boolean;
+  onlineOnly: boolean;
+  hasVideo: boolean;
+  hasVoiceVibe: boolean;
+  criteria: DiscoverFiltersCriteria;
+}
+
+export type DiscoveryProfile = PublicProfile & {
+  compatibility: number;
+  compatibilityReasons: string[];
+  badges: string[];
+  isOnline: boolean;
+  isRecentlyActive: boolean;
+  likedByMe: boolean;
+  mediaLikedByMe: string[];
+};
+
+export interface HeartAllowance {
+  remaining: number;
+  limit: number;
+  refillAt: string;
+}
+
+export interface DiscoveryResponse {
+  mode: string;
+  profiles: DiscoveryProfile[];
+  heartAllowance: HeartAllowance;
+}
+
+export type HeartInputKind = typeof HeartInputKind[keyof typeof HeartInputKind];
+
+
+export const HeartInputKind = {
+  heart: 'heart',
+  super_pulse: 'super_pulse',
+} as const;
+
+export interface HeartInput {
+  toUserId: string;
+  kind: HeartInputKind;
+}
+
+export interface Match {
+  id: string;
+  userId: string;
+  firstName: string;
+  age: number;
+  /** @nullable */
+  region?: string | null;
+  /** @nullable */
+  country?: string | null;
+  createdAt: string;
+}
+
+export interface HeartResponse {
+  /** @nullable */
+  heartId: string | null;
+  kind: string;
+  remaining: number;
+  limit: number;
+  refillAt: string;
+  matched: boolean;
+  match: Match | null;
+}
+
+export interface BlurredLikePreview {
+  userId: string;
+  firstInitial: string;
+  /** @nullable */
+  photoPath: string | null;
+  createdAt: string;
+  blurred: boolean;
+}
+
+export interface LikesReceived {
+  count: number;
+  previews: BlurredLikePreview[];
+}
+
+export type MediaInteractionInputKind = typeof MediaInteractionInputKind[keyof typeof MediaInteractionInputKind];
+
+
+export const MediaInteractionInputKind = {
+  like: 'like',
+  super_pulse: 'super_pulse',
+  reaction: 'reaction',
+} as const;
+
+/**
+ * @nullable
+ */
+export type MediaInteractionInputReaction = typeof MediaInteractionInputReaction[keyof typeof MediaInteractionInputReaction] | null;
+
+
+export const MediaInteractionInputReaction = {
+  like: 'like',
+  heart_eyes: 'heart_eyes',
+  laugh: 'laugh',
+  fire: 'fire',
+  clap: 'clap',
+  wow: 'wow',
+} as const;
+
+export interface MediaInteractionInput {
+  kind: MediaInteractionInputKind;
+  /** @nullable */
+  reaction?: MediaInteractionInputReaction;
+}
+
+export interface MediaInteractionResponse {
+  mediaId: string;
+  kind: string;
+  /** @nullable */
+  reaction: string | null;
+  active: boolean;
+}
+
+export interface MediaComment {
+  id: string;
+  mediaId: string;
+  userId: string;
+  authorName: string;
+  body: string;
+  /** @nullable */
+  replyToId: string | null;
+  createdAt: string;
+  canLikeBack: boolean;
+}
+
+export interface MediaCommentInput {
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  body: string;
+  /** @nullable */
+  replyToId?: string | null;
+}
+
+export type CommentActionInputAction = typeof CommentActionInputAction[keyof typeof CommentActionInputAction];
+
+
+export const CommentActionInputAction = {
+  like_back: 'like_back',
+  ignore: 'ignore',
+  reply: 'reply',
+} as const;
+
+export interface CommentActionInput {
+  action: CommentActionInputAction;
+  /** @nullable */
+  body?: string | null;
+}
+
+export interface CommentActionResponse {
+  comment: MediaComment;
+  matched: boolean;
+}
+
 /**
  * Invalid request
  */
@@ -246,4 +475,22 @@ export type BadRequestResponse = Error;
  * Authentication required
  */
 export type UnauthorizedResponse = Error;
+
+/**
+ * Not found
+ */
+export type NotFoundResponse = Error;
+
+/**
+ * Access denied
+ */
+export type ForbiddenResponse = Error;
+
+export type GetMyMatches200 = {
+  matches: Match[];
+};
+
+export type GetMediaComments200 = {
+  comments: MediaComment[];
+};
 

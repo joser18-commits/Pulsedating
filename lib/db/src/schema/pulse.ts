@@ -5,6 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -16,6 +17,8 @@ export const pulseAccounts = pgTable("pulse_accounts", {
   clerkUserId: varchar("clerk_user_id", { length: 191 }).primaryKey(),
   ageVerified: boolean("age_verified").notNull().default(false),
   emailVerified: boolean("email_verified").notNull().default(false),
+  identityVerified: boolean("identity_verified").notNull().default(false),
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -34,6 +37,8 @@ export const pulseProfiles = pgTable("pulse_profiles", {
   hobbies: jsonb("hobbies").$type<string[]>().notNull().default([]),
   lifestyle: varchar("lifestyle", { length: 160 }),
   familyGoals: varchar("family_goals", { length: 160 }),
+  smoking: varchar("smoking", { length: 80 }),
+  drinking: varchar("drinking", { length: 80 }),
   futureGoals: jsonObject,
   media: jsonb("media").$type<
     Array<{ id: string; kind: "photo" | "video"; path: string; alt?: string | null; sortOrder: number }>
@@ -74,6 +79,7 @@ export const pulseSettings = pgTable("pulse_settings", {
   showAge: boolean("show_age").notNull().default(true),
   showRegion: boolean("show_region").notNull().default(true),
   notificationsEnabled: boolean("notifications_enabled").notNull().default(true),
+  commentPermission: varchar("comment_permission", { length: 40 }).notNull().default("eligible"),
   deleteRequested: boolean("delete_requested").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -86,21 +92,30 @@ export const pulseOnboarding = pgTable("pulse_onboarding", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Phase 2 relationship architecture. These tables are intentionally lightweight
-// foundations; no discovery, messaging, or billing flows are exposed in Phase 1.
+// Phase 2 relationship and interaction entities.
 export const pulseHearts = pgTable("pulse_hearts", {
   id: varchar("id", { length: 64 }).primaryKey(),
   fromUserId: varchar("from_user_id", { length: 191 }).notNull(),
   toUserId: varchar("to_user_id", { length: 191 }).notNull(),
+  kind: varchar("kind", { length: 24 }).notNull().default("heart"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  directionKindIdx: uniqueIndex("pulse_hearts_direction_kind_idx").on(
+    table.fromUserId,
+    table.toUserId,
+    table.kind,
+  ),
+}));
 
 export const pulseMatches = pgTable("pulse_matches", {
   id: varchar("id", { length: 64 }).primaryKey(),
   userAId: varchar("user_a_id", { length: 191 }).notNull(),
   userBId: varchar("user_b_id", { length: 191 }).notNull(),
+  pairKey: varchar("pair_key", { length: 383 }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  pairKeyIdx: uniqueIndex("pulse_matches_pair_key_idx").on(table.pairKey),
+}));
 
 export const pulseMessages = pgTable("pulse_messages", {
   id: varchar("id", { length: 64 }).primaryKey(),
@@ -114,14 +129,24 @@ export const pulseMediaLikes = pgTable("pulse_media_likes", {
   id: varchar("id", { length: 64 }).primaryKey(),
   mediaId: varchar("media_id", { length: 64 }).notNull(),
   userId: varchar("user_id", { length: 191 }).notNull(),
+  reaction: varchar("reaction", { length: 24 }).notNull().default("like"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  mediaUserIdx: uniqueIndex("pulse_media_likes_media_user_idx").on(
+    table.mediaId,
+    table.userId,
+  ),
+}));
 
 export const pulseMediaComments = pgTable("pulse_media_comments", {
   id: varchar("id", { length: 64 }).primaryKey(),
   mediaId: varchar("media_id", { length: 64 }).notNull(),
   userId: varchar("user_id", { length: 191 }).notNull(),
   body: text("body").notNull(),
+  replyToId: varchar("reply_to_id", { length: 64 }),
+  status: varchar("status", { length: 24 }).notNull().default("visible"),
+  likedBackAt: timestamp("liked_back_at", { withTimezone: true }),
+  ignoredAt: timestamp("ignored_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

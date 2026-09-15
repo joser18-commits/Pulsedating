@@ -37,6 +37,10 @@ export interface ProfileInput {
   lifestyle?: string | null;
   /** @nullable */
   familyGoals?: string | null;
+  /** @nullable */
+  smoking?: string | null;
+  /** @nullable */
+  drinking?: string | null;
   futureGoals?: FutureGoals;
   /** @maxItems 7 */
   media?: ProfileMedia[];

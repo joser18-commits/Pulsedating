@@ -16,6 +16,8 @@ tags:
     description: Authenticated account and privacy settings
   - name: storage
     description: Authenticated profile media uploads
+  - name: discovery
+    description: Authenticated discovery, matching, and media interactions
 paths:
   /healthz:
     get:
@@ -226,6 +228,228 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /discover:
+    post:
+      operationId: getDiscovery
+      tags: [discovery]
+      summary: Discover profiles using the signed-in user's preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscoverFilters"
+      responses:
+        "200":
+          description: Discovery profiles and heart allowance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscoveryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /discover/heart:
+    post:
+      operationId: sendHeart
+      tags: [discovery]
+      summary: Send a Heart or Super Pulse to a profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HeartInput"
+      responses:
+        "200":
+          description: Heart result and current allowance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HeartResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          description: Heart allowance exhausted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HeartResponse"
+  /me/matches:
+    get:
+      operationId: getMyMatches
+      tags: [discovery]
+      summary: Get persisted matches for the signed-in user
+      responses:
+        "200":
+          description: Matches
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Match"
+                required: [matches]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /me/likes:
+    get:
+      operationId: getMyLikes
+      tags: [discovery]
+      summary: Get the real number of people who liked the signed-in user
+      responses:
+        "200":
+          description: Likes received with blurred previews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikesReceived"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /discover/media/{mediaId}/interaction:
+    post:
+      operationId: interactWithMedia
+      tags: [discovery]
+      summary: Like, Super Pulse, or react to profile media
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaInteractionInput"
+      responses:
+        "200":
+          description: Persisted media interaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaInteractionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /discover/media/{mediaId}/comments:
+    get:
+      operationId: getMediaComments
+      tags: [discovery]
+      summary: Get visible comments for profile media
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Visible comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MediaComment"
+                required: [comments]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createMediaComment
+      tags: [discovery]
+      summary: Comment on profile media when allowed
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaCommentInput"
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaComment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /discover/comments/{commentId}/action:
+    post:
+      operationId: actOnComment
+      tags: [discovery]
+      summary: Like back, reply to, or ignore a media comment
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentActionInput"
+      responses:
+        "200":
+          description: Updated comment action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentActionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /discover/media/{profileId}/{mediaId}:
+    get:
+      operationId: getDiscoveryMedia
+      tags: [discovery]
+      summary: Stream profile media only when the profile is viewable
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Profile media bytes
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
   responses:
     BadRequest:
@@ -236,6 +460,18 @@ components:
             $ref: "#/components/schemas/Error"
     Unauthorized:
       description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Access denied
       content:
         application/json:
           schema:
@@ -301,6 +537,10 @@ components:
           type: ["string", "null"]
         familyGoals:
           type: ["string", "null"]
+        smoking:
+          type: ["string", "null"]
+        drinking:
+          type: ["string", "null"]
         futureGoals:
           $ref: "#/components/schemas/FutureGoals"
         media:
@@ -353,6 +593,10 @@ components:
         lifestyle:
           type: ["string", "null"]
         familyGoals:
+          type: ["string", "null"]
+        smoking:
+          type: ["string", "null"]
+        drinking:
           type: ["string", "null"]
         futureGoals:
           $ref: "#/components/schemas/FutureGoals"
@@ -510,9 +754,12 @@ components:
           type: boolean
         notificationsEnabled:
           type: boolean
+        commentPermission:
+          type: string
+          enum: [eligible, verified, liked, matches, nobody]
         deleteRequested:
           type: boolean
-      required: [discoverable, showAge, showRegion, notificationsEnabled, deleteRequested]
+      required: [discoverable, showAge, showRegion, notificationsEnabled, commentPermission, deleteRequested]
     SettingsInput:
       type: object
       properties:
@@ -524,6 +771,9 @@ components:
           type: boolean
         notificationsEnabled:
           type: boolean
+        commentPermission:
+          type: string
+          enum: [eligible, verified, liked, matches, nobody]
         deleteRequested:
           type: boolean
     OnboardingProgress:
@@ -573,4 +823,247 @@ components:
         objectPath:
           type: string
       required: [uploadURL, objectPath]
+    DiscoverFilters:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [nearby, global, right-now]
+        gender:
+          type: ["string", "null"]
+        ageMin:
+          type: ["integer", "null"]
+        ageMax:
+          type: ["integer", "null"]
+        distanceMiles:
+          type: ["integer", "null"]
+        city:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        worldwide:
+          type: boolean
+        relationshipIntention:
+          type: ["string", "null"]
+        language:
+          type: ["string", "null"]
+        children:
+          type: ["string", "null"]
+        smoking:
+          type: ["string", "null"]
+        drinking:
+          type: ["string", "null"]
+        interests:
+          type: array
+          items:
+            type: string
+        verified:
+          type: boolean
+        newUsers:
+          type: boolean
+        onlineOnly:
+          type: boolean
+        hasVideo:
+          type: boolean
+        hasVoiceVibe:
+          type: boolean
+        criteria:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [required, preferred, doesnt_matter]
+      required: [mode, interests, verified, newUsers, onlineOnly, hasVideo, hasVoiceVibe, criteria]
+    DiscoveryResponse:
+      type: object
+      properties:
+        mode:
+          type: string
+        profiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiscoveryProfile"
+        heartAllowance:
+          $ref: "#/components/schemas/HeartAllowance"
+      required: [mode, profiles, heartAllowance]
+    DiscoveryProfile:
+      allOf:
+        - $ref: "#/components/schemas/PublicProfile"
+        - type: object
+          properties:
+            compatibility:
+              type: integer
+            compatibilityReasons:
+              type: array
+              items:
+                type: string
+            badges:
+              type: array
+              items:
+                type: string
+            isOnline:
+              type: boolean
+            isRecentlyActive:
+              type: boolean
+            likedByMe:
+              type: boolean
+            mediaLikedByMe:
+              type: array
+              items:
+                type: string
+          required: [compatibility, compatibilityReasons, badges, isOnline, isRecentlyActive, likedByMe, mediaLikedByMe]
+    HeartAllowance:
+      type: object
+      properties:
+        remaining:
+          type: integer
+        limit:
+          type: integer
+        refillAt:
+          type: string
+          format: date-time
+      required: [remaining, limit, refillAt]
+    HeartInput:
+      type: object
+      required: [toUserId, kind]
+      properties:
+        toUserId:
+          type: string
+        kind:
+          type: string
+          enum: [heart, super_pulse]
+    HeartResponse:
+      type: object
+      properties:
+        heartId:
+          type: ["string", "null"]
+        kind:
+          type: string
+        remaining:
+          type: integer
+        limit:
+          type: integer
+        refillAt:
+          type: string
+          format: date-time
+        matched:
+          type: boolean
+        match:
+          allOf:
+            - $ref: "#/components/schemas/Match"
+          nullable: true
+      required: [heartId, kind, remaining, limit, refillAt, matched, match]
+    Match:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        firstName:
+          type: string
+        age:
+          type: integer
+        region:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, firstName, age, createdAt]
+    LikesReceived:
+      type: object
+      properties:
+        count:
+          type: integer
+        previews:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlurredLikePreview"
+      required: [count, previews]
+    BlurredLikePreview:
+      type: object
+      properties:
+        userId:
+          type: string
+        firstInitial:
+          type: string
+        photoPath:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        blurred:
+          type: boolean
+      required: [userId, firstInitial, photoPath, createdAt, blurred]
+    MediaInteractionInput:
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [like, super_pulse, reaction]
+        reaction:
+          type: ["string", "null"]
+          enum: [like, heart_eyes, laugh, fire, clap, wow, null]
+    MediaInteractionResponse:
+      type: object
+      properties:
+        mediaId:
+          type: string
+        kind:
+          type: string
+        reaction:
+          type: ["string", "null"]
+        active:
+          type: boolean
+      required: [mediaId, kind, reaction, active]
+    MediaComment:
+      type: object
+      properties:
+        id:
+          type: string
+        mediaId:
+          type: string
+        userId:
+          type: string
+        authorName:
+          type: string
+        body:
+          type: string
+        replyToId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        canLikeBack:
+          type: boolean
+      required: [id, mediaId, userId, authorName, body, replyToId, createdAt, canLikeBack]
+    MediaCommentInput:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 500
+        replyToId:
+          type: ["string", "null"]
+    CommentActionInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [like_back, ignore, reply]
+        body:
+          type: ["string", "null"]
+    CommentActionResponse:
+      type: object
+      properties:
+        comment:
+          $ref: "#/components/schemas/MediaComment"
+        matched:
+          type: boolean
+      required: [comment, matched]
 
