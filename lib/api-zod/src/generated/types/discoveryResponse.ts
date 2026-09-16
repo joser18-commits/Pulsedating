@@ -12,4 +12,5 @@ export interface DiscoveryResponse {
   mode: string;
   profiles: DiscoveryProfile[];
   heartAllowance: HeartAllowance;
+  likeAllowance: HeartAllowance;
 }

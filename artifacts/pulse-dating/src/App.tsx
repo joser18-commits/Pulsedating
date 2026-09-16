@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { useForm } from 'react-hook-form';
 import { ClerkProvider, SignIn, SignUp, useAuth, useClerk, useUser } from '@clerk/react';
 import { shadcn } from '@clerk/themes';
-import { ArrowRight, Check, ChevronLeft, ChevronRight, CircleHelp, Compass, Eye, Globe2, Heart, ImagePlus, LockKeyhole, LogOut, Menu, Mic2, MoreHorizontal, PenLine, Radio, Save, Settings2, ShieldCheck, Sparkles, UserRound, Users, X, XCircle, Zap } from 'lucide-react';
+import { ArrowRight, Bell, Check, ChevronLeft, ChevronRight, CircleHelp, Compass, Eye, Globe2, Heart, ImagePlus, LockKeyhole, LogOut, Menu, Mic2, MoreHorizontal, PenLine, Radio, Save, Settings2, ShieldCheck, Sparkles, UserRound, Users, X, XCircle, Zap } from 'lucide-react';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation } from 'wouter';
 import {
   getGetMyPreferencesQueryKey,
@@ -11,7 +11,11 @@ import {
   getGetMySettingsQueryKey,
   getGetMySummaryQueryKey,
   getGetMyVibeDnaQueryKey,
+  getGetMyNotificationsQueryKey,
   getHealthCheckQueryKey,
+  useDeleteMyAccount,
+  useGetMyNotifications,
+  useMarkMyNotificationsRead,
   useGetMyPreferences,
   useGetMyProfile,
   useGetMySettings,
@@ -168,10 +172,17 @@ function AuthPage({ mode }: { mode: 'sign-in' | 'sign-up' }) {
 
 function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { signOut } = useClerk();
   const { data: health } = useHealthCheck({ query: { queryKey: getHealthCheckQueryKey(), staleTime: 60_000 } });
+  const notifications = useGetMyNotifications({ query: { queryKey: getGetMyNotificationsQueryKey(), refetchInterval: 60_000 } });
+  const markNotificationsRead = useMarkMyNotificationsRead();
   const links = [{ href: '/app', label: 'Home', icon: Compass }, { href: '/discover', label: 'Discover', icon: Radio }, { href: '/likes', label: 'Who liked me', icon: Heart }, { href: '/vibe-dna', label: 'Vibe DNA', icon: Sparkles }, { href: '/profile', label: 'Profile', icon: UserRound }, { href: '/settings', label: 'Settings', icon: Settings2 }];
-  return <div className="noise min-h-[100dvh] bg-background"><aside className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-sidebar-border bg-sidebar px-5 py-6 transition-transform duration-300 md:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}><div className="flex items-center justify-between"><Logo /><button onClick={() => setOpen(false)} className="focus-ring rounded-lg p-2 text-muted-foreground md:hidden" data-testid="button-close-menu"><X size={19} /></button></div><div className="mt-14 flex-1 space-y-1">{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} onClick={() => setOpen(false)} className="focus-ring flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-muted-foreground transition hover:bg-white/[.05] hover:text-foreground" data-testid={`link-nav-${label.toLowerCase().replace(' ', '-')}`}><Icon size={18} /><span>{label}</span>{href === '/vibe-dna' && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}</Link>)}</div><div className="border-t border-sidebar-border pt-5"><div className="mb-4 flex items-center gap-3 rounded-xl bg-white/[.03] p-3"><span className="grid h-9 w-9 place-items-center rounded-full border border-primary/50 bg-primary/10 text-xs font-semibold text-primary">YO</span><div><p className="text-sm font-medium">Your private space</p><p className="text-xs text-muted-foreground">{health?.status === 'ok' ? 'Signal is clear' : 'Checking signal'}</p></div></div><button onClick={() => signOut({ redirectUrl: basePath || '/' })} className="focus-ring flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-muted-foreground transition hover:bg-white/[.05] hover:text-foreground" data-testid="button-logout"><LogOut size={18} /> Log out</button></div></aside><div className="md:pl-72"><header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-border bg-background/80 px-5 backdrop-blur-xl md:px-10"><button className="focus-ring rounded-lg p-2 text-muted-foreground md:hidden" onClick={() => setOpen(true)} data-testid="button-open-menu"><Menu size={21} /></button><div className="md:hidden"><Logo compact /></div><div className="ml-auto flex items-center gap-2"><Link href="/profile" className="focus-ring grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-sm font-semibold text-primary hover:border-primary" data-testid="link-header-profile">YO</Link></div></header><main className="mx-auto max-w-6xl px-5 py-10 md:px-10 md:py-14">{children}</main></div></div>;
+  const openNotifications = () => {
+    setNotificationsOpen((value) => !value);
+    if (!notificationsOpen && (notifications.data?.unreadCount ?? 0) > 0) markNotificationsRead.mutate();
+  };
+  return <div className="noise min-h-[100dvh] bg-background"><aside className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-sidebar-border bg-sidebar px-5 py-6 transition-transform duration-300 md:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}><div className="flex items-center justify-between"><Logo /><button onClick={() => setOpen(false)} className="focus-ring rounded-lg p-2 text-muted-foreground md:hidden" data-testid="button-close-menu"><X size={19} /></button></div><div className="mt-14 flex-1 space-y-1">{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} onClick={() => setOpen(false)} className="focus-ring flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-muted-foreground transition hover:bg-white/[.05] hover:text-foreground" data-testid={`link-nav-${label.toLowerCase().replace(' ', '-')}`}><Icon size={18} /><span>{label}</span>{href === '/vibe-dna' && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}</Link>)}</div><div className="border-t border-sidebar-border pt-5"><div className="mb-4 flex items-center gap-3 rounded-xl bg-white/[.03] p-3"><span className="grid h-9 w-9 place-items-center rounded-full border border-primary/50 bg-primary/10 text-xs font-semibold text-primary">YO</span><div><p className="text-sm font-medium">Your private space</p><p className="text-xs text-muted-foreground">{health?.status === 'ok' ? 'Signal is clear' : 'Checking signal'}</p></div></div><button onClick={() => signOut({ redirectUrl: basePath || '/' })} className="focus-ring flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-muted-foreground transition hover:bg-white/[.05] hover:text-foreground" data-testid="button-logout"><LogOut size={18} /> Log out</button></div></aside><div className="md:pl-72"><header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-border bg-background/80 px-5 backdrop-blur-xl md:px-10"><button className="focus-ring rounded-lg p-2 text-muted-foreground md:hidden" onClick={() => setOpen(true)} data-testid="button-open-menu"><Menu size={21} /></button><div className="md:hidden"><Logo compact /></div><div className="relative ml-auto flex items-center gap-2"><button type="button" onClick={openNotifications} className="focus-ring relative grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary" aria-label="Open notifications" data-testid="button-notifications"><Bell size={17} />{(notifications.data?.unreadCount ?? 0) > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{notifications.data?.unreadCount}</span>}</button><Link href="/profile" className="focus-ring grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-sm font-semibold text-primary hover:border-primary" data-testid="link-header-profile">YO</Link>{notificationsOpen && <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-border bg-card p-4 shadow-2xl"><div className="mb-3 flex items-center justify-between"><p className="font-display text-lg">Notifications</p><span className="text-xs text-muted-foreground">{notifications.data?.notifications.length ?? 0} recent</span></div>{notifications.isLoading ? <p className="text-sm text-muted-foreground">Loading your private notifications...</p> : notifications.data?.notifications.length ? <div className="max-h-80 space-y-2 overflow-y-auto">{notifications.data.notifications.slice(0, 8).map((item) => <div key={item.id} className={`rounded-xl border p-3 ${item.readAt ? 'border-border' : 'border-primary/30 bg-primary/[.05]'}`}><p className="text-sm font-semibold">{item.title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{item.body}</p></div>)}</div> : <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">No new signals yet.</p>}</div>}</div></header><main className="mx-auto max-w-6xl px-5 py-10 md:px-10 md:py-14">{children}</main></div></div>;
 }
 
 function UserPortal() {
@@ -198,16 +209,54 @@ function VibeDnaPage() {
   const { data, isLoading, isError, refetch } = useGetMyVibeDna({ query: { queryKey: getGetMyVibeDnaQueryKey() } });
   const progressMutation = useUpdateOnboardingProgress();
   const saveMutation = useUpdateMyVibeDna();
+  const [, navigate] = useLocation();
   const [step, setStep] = useState(0);
   const [values, setValues] = useState<Record<string, string[]>>({});
+  const [completionMessage, setCompletionMessage] = useState('');
   useEffect(() => { if (data) setValues({ datingIntention: data.datingIntention ? [data.datingIntention] : [], personality: data.personality ?? [], communicationStyle: data.communicationStyle ? [data.communicationStyle] : [], relationshipGoals: data.relationshipGoals ?? [], lifestyle: data.lifestyle ?? [], interests: data.interests ?? [], familyGoals: data.familyGoals ? [data.familyGoals] : [], lookingFor: data.lookingFor ?? [] }); }, [data]);
   if (isLoading) return <AppShell><div className="mx-auto max-w-3xl space-y-5"><Skeleton className="h-4 w-24" /><Skeleton className="h-14 w-2/3" /><Skeleton className="h-72" /></div></AppShell>;
   if (isError) return <AppShell><ErrorState onRetry={() => refetch()} /></AppShell>;
   const current = vibeSteps[step];
   const selected = values[current.key] ?? [];
   const toggle = (option: string) => setValues((prev) => { const currentValues = prev[current.key] ?? []; const single = ['datingIntention', 'communicationStyle', 'familyGoals'].includes(current.key); return { ...prev, [current.key]: single ? [option] : currentValues.includes(option) ? currentValues.filter((item) => item !== option) : [...currentValues, option] }; });
-  const next = () => { if (step < vibeSteps.length - 1) { progressMutation.mutate({ data: { currentStep: step + 1, completedSteps: vibeSteps.slice(0, step + 1).map((item) => item.key), complete: false } }); setStep((value) => value + 1); } else { const payload: VibeDnaInput = { datingIntention: values.datingIntention?.[0] ?? null, personality: values.personality ?? [], communicationStyle: values.communicationStyle?.[0] ?? null, relationshipGoals: values.relationshipGoals ?? [], lifestyle: values.lifestyle ?? [], interests: values.interests ?? [], familyGoals: values.familyGoals?.[0] ?? null, lookingFor: values.lookingFor ?? [] }; saveMutation.mutate({ data: payload }, { onSuccess: () => progressMutation.mutate({ data: { currentStep: 8, completedSteps: vibeSteps.map((item) => item.key), complete: true } }) }); } };
-  return <AppShell><div className="mx-auto max-w-3xl animate-rise"><div className="mb-10 flex items-center justify-between gap-5"><div><p className="font-mono-pulse text-xs uppercase tracking-[.18em] text-primary">Vibe DNA / in progress</p><p className="mt-2 text-sm text-muted-foreground">This is the part that makes a profile feel like a person.</p></div><span className="font-mono-pulse text-xs text-muted-foreground">{String(step + 1).padStart(2, '0')} / 08</span></div><div className="mb-12 flex gap-1.5">{vibeSteps.map((item, index) => <button key={item.key} onClick={() => index <= step && setStep(index)} className={`h-1.5 flex-1 rounded-full transition ${index <= step ? 'bg-primary' : 'bg-muted'}`} aria-label={`Go to step ${index + 1}`} data-testid={`button-step-${index + 1}`} />)}</div><SectionHeading eyebrow={current.eyebrow} title={current.title} copy={current.copy} /><div className="grid gap-3 sm:grid-cols-2">{current.options.map((option) => <Chip key={option} selected={selected.includes(option)} onClick={() => toggle(option)} testId={`chip-${current.key}-${option.toLowerCase().replaceAll(' ', '-')}`}>{option}</Chip>)}</div><div className="mt-12 flex items-center justify-between border-t border-border pt-6"><Button variant="ghost" onClick={() => setStep((value) => Math.max(0, value - 1))} disabled={step === 0} data-testid="button-vibe-back"><ChevronLeft size={17} /> Back</Button><Button onClick={next} disabled={selected.length === 0 || saveMutation.isPending} data-testid="button-vibe-next">{step === vibeSteps.length - 1 ? (saveMutation.isPending ? 'Saving...' : 'Finish Vibe DNA') : 'Keep going'} <ChevronRight size={17} /></Button></div></div></AppShell>;
+  const next = () => {
+    if (step < vibeSteps.length - 1) {
+      progressMutation.mutate({
+        data: {
+          currentStep: step + 1,
+          completedSteps: vibeSteps.slice(0, step + 1).map((item) => item.key),
+          complete: false,
+        },
+      });
+      setStep((value) => value + 1);
+      return;
+    }
+    const payload: VibeDnaInput = {
+      datingIntention: values.datingIntention?.[0] ?? null,
+      personality: values.personality ?? [],
+      communicationStyle: values.communicationStyle?.[0] ?? null,
+      relationshipGoals: values.relationshipGoals ?? [],
+      lifestyle: values.lifestyle ?? [],
+      interests: values.interests ?? [],
+      familyGoals: values.familyGoals?.[0] ?? null,
+      lookingFor: values.lookingFor ?? [],
+    };
+    setCompletionMessage('');
+    saveMutation.mutate({ data: payload }, {
+      onSuccess: () => progressMutation.mutate(
+        { data: { currentStep: 8, completedSteps: vibeSteps.map((item) => item.key), complete: true } },
+        {
+          onSuccess: () => {
+            setCompletionMessage('Vibe DNA saved. Your signal is ready.');
+            window.setTimeout(() => navigate('/profile'), 900);
+          },
+          onError: () => setCompletionMessage('Your answers saved, but onboarding progress could not be updated. Please try again.'),
+        },
+      ),
+      onError: () => setCompletionMessage('We could not save your Vibe DNA. Please try again.'),
+    });
+  };
+  return <AppShell><div className="mx-auto max-w-3xl animate-rise"><div className="mb-10 flex items-center justify-between gap-5"><div><p className="font-mono-pulse text-xs uppercase tracking-[.18em] text-primary">Vibe DNA / in progress</p><p className="mt-2 text-sm text-muted-foreground">This is the part that makes a profile feel like a person.</p></div><span className="font-mono-pulse text-xs text-muted-foreground">{String(step + 1).padStart(2, '0')} / 08</span></div><div className="mb-12 flex gap-1.5">{vibeSteps.map((item, index) => <button key={item.key} onClick={() => index <= step && setStep(index)} className={`h-1.5 flex-1 rounded-full transition ${index <= step ? 'bg-primary' : 'bg-muted'}`} aria-label={`Go to step ${index + 1}`} data-testid={`button-step-${index + 1}`} />)}</div><SectionHeading eyebrow={current.eyebrow} title={current.title} copy={current.copy} /><div className="grid gap-3 sm:grid-cols-2">{current.options.map((option) => <Chip key={option} selected={selected.includes(option)} onClick={() => toggle(option)} testId={`chip-${current.key}-${option.toLowerCase().replaceAll(' ', '-')}`}>{option}</Chip>)}</div>{completionMessage && <p className={`mt-5 rounded-xl border p-4 text-sm ${completionMessage.startsWith('Vibe DNA saved') ? 'border-secondary/30 bg-secondary/10 text-secondary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`} role="status">{completionMessage}</p>}<div className="mt-12 flex items-center justify-between border-t border-border pt-6"><Button variant="ghost" onClick={() => setStep((value) => Math.max(0, value - 1))} disabled={step === 0} data-testid="button-vibe-back"><ChevronLeft size={17} /> Back</Button><Button onClick={next} disabled={selected.length === 0 || saveMutation.isPending || progressMutation.isPending} data-testid="button-vibe-next">{step === vibeSteps.length - 1 ? (saveMutation.isPending || progressMutation.isPending ? 'Saving...' : 'Finish Vibe DNA') : 'Keep going'} <ChevronRight size={17} /></Button></div></div></AppShell>;
 }
 
 function ProfilePage() {
@@ -228,19 +277,168 @@ function ProfilePage() {
   return <AppShell><div className="animate-rise"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-end"><SectionHeading eyebrow="Public profile / edit" title="Make room for the real you." copy="Your profile is an invitation, not an audition. Share what helps someone understand your life." /><span className="mb-8 flex items-center gap-2 text-xs text-muted-foreground"><Eye size={14} /> Preview stays private until you choose</span></div><form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-5 lg:grid-cols-[1fr_.62fr]"><section className="space-y-5"><div className="rounded-2xl border border-border bg-card p-6 md:p-8"><div className="mb-7 flex items-center justify-between"><div><h2 className="font-display text-2xl">About me</h2><p className="mt-1 text-sm text-muted-foreground">The facts and the texture.</p></div><UserRound className="text-primary" size={21} /></div><div className="grid gap-4 sm:grid-cols-2"><Field label="First name" {...form.register('firstName', { required: true })} /><Field label="Age" type="number" min={18} {...form.register('age', { valueAsNumber: true, min: 18 })} /><Field label="Country" {...form.register('country')} /><Field label="Region / city" {...form.register('region')} /><Field label="Gender" placeholder="Optional" {...form.register('gender')} /><Field label="Height (cm)" type="number" placeholder="Optional" {...form.register('heightCm', { valueAsNumber: true })} /></div><div className="mt-4 grid gap-4"><Textarea label="About you" placeholder="What would you want someone to know after one good conversation?" {...form.register('aboutMe')} /><Field label="Relationship intention" placeholder="e.g. A lasting partnership" {...form.register('relationshipIntention')} /><Field label="Lifestyle" placeholder="e.g. Slow mornings, active weekends" {...form.register('lifestyle')} /><Field label="Family goals" placeholder="Optional, in your own words" {...form.register('familyGoals')} /></div></div><div className="rounded-2xl border border-border bg-card p-6 md:p-8"><div className="mb-7 flex items-center justify-between"><div><h2 className="font-display text-2xl">Future goals</h2><p className="mt-1 text-sm text-muted-foreground">The horizon you are moving toward.</p></div><Compass className="text-secondary" size={21} /></div><div className="grid gap-4 sm:grid-cols-2">{futureFields.map((field) => <Field key={field} label={field === 'fiveYearVision' ? 'Five-year vision' : field.replace(/([A-Z])/g, ' $1')} placeholder="Optional" {...form.register(`futureGoals.${field}`)} />)}</div></div></section><aside className="space-y-5"><div className="rounded-2xl border border-border bg-card p-6"><div className="mb-6 flex items-center justify-between"><div><h2 className="font-display text-2xl">Voice Vibe</h2><p className="mt-1 text-sm text-muted-foreground">Let your voice carry the feeling.</p></div><Mic2 className="text-accent" size={21} /></div><div className="grid place-items-center rounded-xl border border-dashed border-border bg-background p-7 text-center"><div className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-accent/10 text-accent"><Mic2 size={23} /></div><p className="text-sm font-medium">Add a voice note</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A 30 second hello can say what a bio cannot.</p><label className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:border-accent"><ImagePlus size={14} /> Choose audio<input type="file" className="sr-only" accept="audio/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) upload.mutate({ data: { name: file.name, size: file.size, contentType: file.type, mediaKind: 'voice' } }); }} data-testid="input-voice-vibe" /></label></div></div><div className="rounded-2xl border border-border bg-card p-6"><div className="mb-6 flex items-center justify-between"><div><h2 className="font-display text-2xl">Profile media</h2><p className="mt-1 text-sm text-muted-foreground">{media.length} of 7 added</p></div><ImagePlus className="text-primary" size={21} /></div><div className="grid grid-cols-3 gap-2">{media.map((item) => <div key={item.id} className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-background p-2"><div className="grid h-full place-items-center rounded-lg bg-primary/10 text-primary">{item.kind === 'video' ? <Radio size={21} /> : <ImagePlus size={21} />}</div><button type="button" onClick={() => setMedia((items) => items.filter((entry) => entry.id !== item.id))} className="focus-ring absolute right-1 top-1 hidden rounded-full bg-background/90 p-1 text-destructive group-hover:block" data-testid={`button-remove-media-${item.id}`}><X size={13} /></button></div>)}{media.length < 7 && <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground transition hover:border-primary hover:text-primary"><ImagePlus size={20} /><span className="text-[10px] font-medium">Add media</span><input type="file" className="sr-only" accept="image/*,video/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) handleMedia(file); }} data-testid="input-profile-media" /></label>}</div><p className="mt-4 text-xs leading-5 text-muted-foreground">Your media is stored privately and shown only according to your discovery settings.</p></div><div className="sticky bottom-5 rounded-2xl border border-primary/25 bg-card/95 p-4 backdrop-blur-xl"><Button type="submit" className="w-full" disabled={update.isPending} data-testid="button-save-profile">{update.isPending ? 'Saving your signal...' : <><Save size={17} /> Save profile</>}</Button></div></aside></form></div></AppShell>;
 }
 
+const profileCountries = ['United States', 'Canada', 'United Kingdom', 'Australia', 'Mexico', 'Brazil', 'France', 'Germany', 'Spain'];
+const profileRegions: Record<string, string[]> = {
+  'United States': ['Northeast', 'Midwest', 'South', 'West'],
+  Canada: ['Atlantic', 'Central', 'Prairies', 'West Coast'],
+  'United Kingdom': ['England', 'Scotland', 'Wales', 'Northern Ireland'],
+  Australia: ['New South Wales', 'Victoria', 'Queensland', 'Western Australia'],
+  Mexico: ['Central Mexico', 'Gulf Coast', 'Pacific Coast', 'Yucatán'],
+  Brazil: ['Southeast', 'South', 'Northeast', 'Central-West'],
+  France: ['Île-de-France', 'Auvergne-Rhône-Alpes', 'Provence-Alpes-Côte d’Azur'],
+  Germany: ['Berlin', 'Bavaria', 'Hesse', 'North Rhine-Westphalia'],
+  Spain: ['Madrid', 'Catalonia', 'Andalusia', 'Valencia'],
+};
+const profileCities: Record<string, string[]> = {
+  'United States/Northeast': ['New York', 'Boston', 'Philadelphia', 'Washington'],
+  'United States/West': ['Los Angeles', 'San Francisco', 'Seattle', 'Denver'],
+  'United Kingdom/England': ['London', 'Manchester', 'Birmingham', 'Bristol'],
+  Canada: ['Toronto', 'Montreal', 'Vancouver', 'Calgary'],
+  Australia: ['Sydney', 'Melbourne', 'Brisbane', 'Perth'],
+};
+
+function profileMediaUrl(path: string) {
+  if (path.startsWith('http') || path.startsWith('/api/')) return path;
+  return `/api/storage${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+function ProfilePageRepaired() {
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, refetch } = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey() } });
+  const update = useUpdateMyProfile();
+  const upload = useRequestUploadUrl();
+  const [hobbies, setHobbies] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [media, setMedia] = useState<ProfileMedia[]>([]);
+  const [heightUnit, setHeightUnit] = useState<'cm' | 'ft'>('cm');
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [hobbyDraft, setHobbyDraft] = useState('');
+  const form = useForm<ProfileInput>({
+    values: data ? { ...data, futureGoals: data.futureGoals ?? {}, media: data.media ?? [] } : undefined,
+    defaultValues: {
+      firstName: '',
+      age: 18,
+      gender: '',
+      heightCm: null,
+      country: '',
+      region: '',
+      city: '',
+      languages: [],
+      relationshipIntention: '',
+      aboutMe: '',
+      hobbies: [],
+      lifestyle: '',
+      familyGoals: '',
+      smoking: '',
+      drinking: '',
+      futureGoals: {},
+      media: [],
+      voiceVibePath: null,
+      exactBirthDate: null,
+    },
+  });
+  useEffect(() => {
+    if (data) {
+      setHobbies(data.hobbies ?? []);
+      setLanguages(data.languages ?? []);
+      setMedia(data.media ?? []);
+    }
+  }, [data]);
+  const country = form.watch('country') ?? '';
+  const region = form.watch('region') ?? '';
+  const heightCm = form.watch('heightCm') ?? null;
+  const regionOptions = profileRegions[country] ?? [];
+  const cityOptions = profileCities[`${country}/${region}`] ?? profileCities[country] ?? [];
+  const saveProfile = (overrides: Partial<ProfileInput> = {}) => {
+    const values = form.getValues();
+    update.mutate({
+      data: { ...values, hobbies, languages, media, ...overrides },
+    }, {
+      onSuccess: (profile) => {
+        queryClient.setQueryData(getGetMyProfileQueryKey(), profile);
+        queryClient.invalidateQueries({ queryKey: getGetMySummaryQueryKey() });
+        setUploadStatus('Profile saved.');
+        window.setTimeout(() => setUploadStatus(''), 2200);
+      },
+      onError: () => setUploadStatus('Profile could not be saved. Please try again.'),
+    });
+  };
+  const uploadFile = async (file: File, mediaKind: 'photo' | 'video' | 'voice') => {
+    setUploadStatus(`Uploading ${file.name}...`);
+    try {
+      const result = await upload.mutateAsync({
+        data: { name: file.name, size: file.size, contentType: file.type, mediaKind },
+      });
+      const response = await fetch(result.uploadURL, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+      if (!response.ok) throw new Error('Upload failed');
+      if (mediaKind === 'voice') {
+        form.setValue('voiceVibePath', result.objectPath);
+        const savedProfile = await update.mutateAsync({ data: { ...form.getValues(), hobbies, languages, media, voiceVibePath: result.objectPath } });
+        queryClient.setQueryData(getGetMyProfileQueryKey(), savedProfile);
+        queryClient.invalidateQueries({ queryKey: getGetMySummaryQueryKey() });
+        setUploadStatus('Voice Vibe saved.');
+        return;
+      }
+      if (media.length >= 7) {
+        setUploadStatus('You can add up to 7 profile media items.');
+        return;
+      }
+      const nextMedia: ProfileMedia[] = [...media, {
+        id: `${crypto.randomUUID()}`,
+        kind: mediaKind,
+        path: result.objectPath,
+        alt: file.name,
+        sortOrder: media.length,
+      }];
+      setMedia(nextMedia);
+      const savedProfile = await update.mutateAsync({ data: { ...form.getValues(), hobbies, languages, media: nextMedia } });
+      queryClient.setQueryData(getGetMyProfileQueryKey(), savedProfile);
+      queryClient.invalidateQueries({ queryKey: getGetMySummaryQueryKey() });
+      setUploadStatus('Media uploaded and saved.');
+    } catch {
+      setUploadStatus('Upload failed. Please choose the file again.');
+    }
+  };
+  const toggleLanguage = (language: string) => setLanguages((items) => items.includes(language) ? items.filter((item) => item !== language) : [...items, language]);
+  const addHobby = () => {
+    const value = hobbyDraft.trim();
+    if (value && !hobbies.includes(value)) setHobbies((items) => [...items, value]);
+    setHobbyDraft('');
+  };
+  const setHeightFromImperial = (feet: number, inches: number) => form.setValue('heightCm', Math.round((feet * 12 + inches) * 2.54));
+  if (isLoading) return <AppShell><div className="space-y-5"><Skeleton className="h-6 w-24" /><Skeleton className="h-12 w-1/2" /><Skeleton className="h-96" /></div></AppShell>;
+  if (isError) return <AppShell><ErrorState onRetry={() => refetch()} /></AppShell>;
+  const futureFields: (keyof FutureGoals)[] = ['fiveYearVision', 'marriage', 'children', 'homeOwnership', 'career', 'business', 'financialFreedom', 'travel', 'education', 'relocation', 'wouldRelocate'];
+  const feet = heightCm ? Math.floor(heightCm / 30.48) : 5;
+  const inches = heightCm ? Math.round((heightCm / 2.54) - feet * 12) : 8;
+  return <AppShell><div className="animate-rise"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-end"><SectionHeading eyebrow="Public profile / edit" title="Make room for the real you." copy="Your profile is an invitation, not an audition. Share what helps someone understand your life." /><span className="mb-8 flex items-center gap-2 text-xs text-muted-foreground"><Eye size={14} /> Preview stays private until you choose</span></div><form onSubmit={form.handleSubmit(() => saveProfile())} className="grid gap-5 lg:grid-cols-[1fr_.62fr]"><section className="space-y-5"><div className="rounded-2xl border border-border bg-card p-6 md:p-8"><div className="mb-7 flex items-center justify-between"><div><h2 className="font-display text-2xl">About me</h2><p className="mt-1 text-sm text-muted-foreground">Use clear, structured details and keep the nuanced parts in your own words.</p></div><UserRound className="text-primary" size={21} /></div><div className="grid gap-4 sm:grid-cols-2"><Field label="First name" {...form.register('firstName', { required: true })} /><label className="grid gap-2 text-sm font-medium"><span>Age</span><select {...form.register('age', { valueAsNumber: true })} className="focus-ring h-12 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="select-profile-age">{Array.from({ length: 83 }, (_, index) => index + 18).map((age) => <option key={age} value={age}>{age}</option>)}</select></label><label className="grid gap-2 text-sm font-medium"><span>Country</span><select {...form.register('country', { onChange: () => { form.setValue('region', ''); form.setValue('city', ''); } })} className="focus-ring h-12 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="select-profile-country"><option value="">Choose country</option>{profileCountries.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className="grid gap-2 text-sm font-medium"><span>Region</span><select {...form.register('region', { onChange: () => form.setValue('city', '') })} className="focus-ring h-12 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="select-profile-region"><option value="">Choose region</option>{regionOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className="grid gap-2 text-sm font-medium"><span>City <span className="text-muted-foreground">(optional)</span></span><select {...form.register('city')} className="focus-ring h-12 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="select-profile-city"><option value="">Keep private</option>{cityOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className="grid gap-2 text-sm font-medium"><span>Gender</span><select {...form.register('gender')} className="focus-ring h-12 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="select-profile-gender"><option value="">Prefer not to say</option>{['Woman', 'Man', 'Non-binary', 'Genderqueer', 'Another identity'].map((item) => <option key={item} value={item}>{item}</option>)}</select></label><div className="sm:col-span-2"><div className="flex items-center justify-between gap-3"><label className="grid gap-2 text-sm font-medium"><span>Height</span><select value={heightUnit} onChange={(event) => setHeightUnit(event.target.value as 'cm' | 'ft')} className="h-10 rounded-lg border border-input bg-input px-3 text-sm text-foreground" data-testid="select-height-unit"><option value="cm">Centimetres</option><option value="ft">Feet & inches</option></select></label>{heightUnit === 'cm' ? <select value={heightCm ?? ''} onChange={(event) => form.setValue('heightCm', event.target.value ? Number(event.target.value) : null)} className="mt-6 h-12 flex-1 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="select-profile-height-cm"><option value="">Prefer not to say</option>{Array.from({ length: 81 }, (_, index) => index + 140).map((value) => <option key={value} value={value}>{value} cm</option>)}</select> : <div className="mt-6 flex flex-1 gap-2"><select value={feet} onChange={(event) => setHeightFromImperial(Number(event.target.value), inches)} className="h-12 flex-1 rounded-xl border border-input bg-input px-3 text-foreground" data-testid="select-profile-height-feet">{[4, 5, 6, 7].map((value) => <option key={value} value={value}>{value}′</option>)}</select><select value={inches} onChange={(event) => setHeightFromImperial(feet, Number(event.target.value))} className="h-12 flex-1 rounded-xl border border-input bg-input px-3 text-foreground" data-testid="select-profile-height-inches">{Array.from({ length: 12 }, (_, value) => <option key={value} value={value}>{value}″</option>)}</select></div>}</div><p className="mt-2 text-xs text-muted-foreground">Stored as centimetres so discovery stays consistent across units.</p></div></div><div className="mt-4 grid gap-4"><label className="grid gap-2 text-sm font-medium"><span>Birth date <span className="text-muted-foreground">(private)</span></span><input type="date" {...form.register('exactBirthDate')} className="focus-ring h-12 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="input-profile-birth-date" /><span className="text-xs text-muted-foreground">Only your age is used for discovery.</span></label><Textarea label="About you" placeholder="What would you want someone to know after one good conversation?" {...form.register('aboutMe')} /><label className="grid gap-2 text-sm font-medium"><span>Relationship intention</span><select {...form.register('relationshipIntention')} className="focus-ring h-12 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="select-profile-intention"><option value="">Choose one</option>{['A lasting partnership', 'A meaningful connection', 'Open to seeing where it goes', 'A new chapter'].map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className="grid gap-2 text-sm font-medium"><span>Lifestyle</span><select {...form.register('lifestyle')} className="focus-ring h-12 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="select-profile-lifestyle"><option value="">Choose one</option>{['Slow mornings', 'City energy', 'The outdoors', 'Cooking for people', 'Movement', 'Creative projects'].map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className="grid gap-2 text-sm font-medium"><span>Family goals</span><select {...form.register('familyGoals')} className="focus-ring h-12 rounded-xl border border-input bg-input px-4 text-foreground" data-testid="select-profile-family-goals"><option value="">Prefer not to say</option>{['I want children', 'I am open to children', 'I do not want children', 'I am still figuring it out'].map((item) => <option key={item} value={item}>{item}</option>)}</select></label><div><p className="mb-2 text-sm font-medium">Languages</p><div className="flex flex-wrap gap-2">{['English', 'Spanish', 'French', 'German', 'Portuguese', 'Mandarin'].map((item) => <Chip key={item} selected={languages.includes(item)} onClick={() => toggleLanguage(item)} testId={`chip-profile-language-${item.toLowerCase()}`}>{item}</Chip>)}</div></div><div><p className="mb-2 text-sm font-medium">Interests</p><div className="flex flex-wrap gap-2">{hobbies.map((item) => <span key={item} className="rounded-full bg-secondary/10 px-3 py-1.5 text-xs text-secondary">{item}</span>)}</div><div className="mt-3 flex gap-2"><input value={hobbyDraft} onChange={(event) => setHobbyDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addHobby(); } }} placeholder="Add an interest" className="h-11 min-w-0 flex-1 rounded-xl border border-input bg-input px-3 text-sm text-foreground" data-testid="input-profile-interest" /><Button type="button" variant="outline" onClick={addHobby} data-testid="button-add-profile-interest">Add</Button></div></div></div></div><div className="rounded-2xl border border-border bg-card p-6 md:p-8"><div className="mb-7 flex items-center justify-between"><div><h2 className="font-display text-2xl">Future goals</h2><p className="mt-1 text-sm text-muted-foreground">The horizon you are moving toward.</p></div><Compass className="text-secondary" size={21} /></div><div className="grid gap-4 sm:grid-cols-2">{futureFields.map((field) => <Field key={field} label={field === 'fiveYearVision' ? 'Five-year vision' : field.replace(/([A-Z])/g, ' $1')} placeholder="Optional" {...form.register(`futureGoals.${field}`)} />)}</div></div></section><aside className="space-y-5"><div className="rounded-2xl border border-border bg-card p-6"><div className="mb-6 flex items-center justify-between"><div><h2 className="font-display text-2xl">Voice Vibe</h2><p className="mt-1 text-sm text-muted-foreground">Let your voice carry the feeling.</p></div><Mic2 className="text-accent" size={21} /></div><div className="grid place-items-center rounded-xl border border-dashed border-border bg-background p-7 text-center"><div className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-accent/10 text-accent"><Mic2 size={23} /></div><p className="text-sm font-medium">{data?.voiceVibePath ? 'Voice Vibe saved' : 'Add a voice note'}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A 30 second hello can say what a bio cannot.</p><label className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:border-accent"><ImagePlus size={14} /> Choose audio<input type="file" className="sr-only" accept="audio/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadFile(file, 'voice'); }} data-testid="input-voice-vibe" /></label></div></div><div className="rounded-2xl border border-border bg-card p-6"><div className="mb-6 flex items-center justify-between"><div><h2 className="font-display text-2xl">Profile media</h2><p className="mt-1 text-sm text-muted-foreground">{media.length} of 7 added</p></div><ImagePlus className="text-primary" size={21} /></div><div className="grid grid-cols-3 gap-2">{media.map((item, index) => <div key={item.id} className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-background"><div className="h-full w-full">{item.kind === 'video' ? <video src={profileMediaUrl(item.path)} muted playsInline className="h-full w-full object-cover" /> : <img src={profileMediaUrl(item.path)} alt={item.alt ?? 'Profile media'} className="h-full w-full object-cover" />}</div>{index === 0 && <span className="absolute bottom-1 left-1 rounded bg-background/85 px-1.5 py-1 text-[9px] font-semibold text-primary">Primary</span>}{index > 0 && <button type="button" onClick={() => { const next = [item, ...media.filter((entry) => entry.id !== item.id)].map((entry, order) => ({ ...entry, sortOrder: order })); setMedia(next); saveProfile({ media: next }); }} className="absolute bottom-1 left-1 hidden rounded bg-background/85 px-1.5 py-1 text-[9px] font-semibold text-foreground group-hover:block" data-testid={`button-make-primary-${item.id}`}>Make primary</button>}<button type="button" onClick={() => { const next = media.filter((entry) => entry.id !== item.id).map((entry, order) => ({ ...entry, sortOrder: order })); setMedia(next); saveProfile({ media: next }); }} className="focus-ring absolute right-1 top-1 hidden rounded-full bg-background/90 p-1 text-destructive group-hover:block" data-testid={`button-remove-media-${item.id}`}><X size={13} /></button></div>)}{media.length < 7 && <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-muted-foreground transition hover:border-primary hover:text-primary"><ImagePlus size={20} /><span className="text-[10px] font-medium">Add media</span><input type="file" className="sr-only" accept="image/*,video/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadFile(file, file.type.startsWith('video') ? 'video' : 'photo'); }} data-testid="input-profile-media" /></label>}</div><p className="mt-4 text-xs leading-5 text-muted-foreground">Media is uploaded directly, persisted to your profile, and shown through privacy-checked URLs.</p></div><div className="sticky bottom-5 rounded-2xl border border-primary/25 bg-card/95 p-4 backdrop-blur-xl">{uploadStatus && <p className="mb-3 text-xs text-muted-foreground" role="status">{uploadStatus}</p>}<Button type="submit" className="w-full" disabled={update.isPending || upload.isPending} data-testid="button-save-profile">{update.isPending ? 'Saving your signal...' : <><Save size={17} /> Save profile</>}</Button></div></aside></form></div></AppShell>;
+}
+
 function SettingsPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useGetMySettings({ query: { queryKey: getGetMySettingsQueryKey() } });
   const preferences = useGetMyPreferences({ query: { queryKey: getGetMyPreferencesQueryKey() } });
   const update = useUpdateMySettings();
   const updatePreferences = useUpdateMyPreferences();
+  const deleteAccount = useDeleteMyAccount();
   const { signOut } = useClerk();
+  const [, navigate] = useLocation();
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const form = useForm<SettingsInput & { ageMin?: number; ageMax?: number; maxDistanceMiles?: number }>({ values: { ...data, ageMin: preferences.data?.ageMin, ageMax: preferences.data?.ageMax, maxDistanceMiles: preferences.data?.maxDistanceMiles }, defaultValues: { discoverable: true, showAge: true, showRegion: true, notificationsEnabled: true, commentPermission: 'eligible', deleteRequested: false, ageMin: 25, ageMax: 42, maxDistanceMiles: 50 } });
   const [saved, setSaved] = useState(false);
   if (isLoading || preferences.isLoading) return <AppShell><div className="space-y-5"><Skeleton className="h-5 w-24" /><Skeleton className="h-14 w-2/3" /><Skeleton className="h-72" /></div></AppShell>;
   if (isError || preferences.isError) return <AppShell><ErrorState onRetry={() => refetch()} /></AppShell>;
   const submit = (values: SettingsInput & { ageMin?: number; ageMax?: number; maxDistanceMiles?: number }) => { const { ageMin, ageMax, maxDistanceMiles, ...settings } = values; update.mutate({ data: settings }, { onSuccess: (nextSettings) => { queryClient.setQueryData(getGetMySettingsQueryKey(), nextSettings); setSaved(true); setTimeout(() => setSaved(false), 2200); } }); updatePreferences.mutate({ data: { ageMin, ageMax, maxDistanceMiles } }, { onSuccess: (nextPreferences) => queryClient.setQueryData(getGetMyPreferencesQueryKey(), nextPreferences) }); };
-  return <AppShell><div className="mx-auto max-w-3xl animate-rise"><SectionHeading eyebrow="Settings / your boundaries" title="Keep what matters close." copy="PULSE should feel good to use. Adjust your visibility, preferences, and pace at any time." /><form onSubmit={form.handleSubmit(submit)} className="space-y-4"><SettingsToggle title="Discoverable" copy="Allow your profile to appear to people who match your preferences." field="discoverable" register={form.register} /><SettingsToggle title="Show my age" copy="Your age is visible on your public profile." field="showAge" register={form.register} /><SettingsToggle title="Show my region" copy="Share your region, never your exact location." field="showRegion" register={form.register} /><SettingsToggle title="Notifications" copy="Notification preferences are coming soon. Your current choice is saved." field="notificationsEnabled" register={form.register} /><div className="rounded-2xl border border-border bg-card p-5"><div className="flex items-start gap-4"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/10 text-secondary"><CircleHelp size={19} /></div><div className="flex-1"><h2 className="font-display text-xl">Who can comment?</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">Set the permission that protects your profile media conversations.</p><select {...form.register('commentPermission')} className="focus-ring mt-4 h-12 w-full rounded-xl border border-input bg-input px-4 text-sm text-foreground" data-testid="select-comment-permission"><option value="eligible">Eligible people</option><option value="verified">Verified people</option><option value="liked">People you have liked</option><option value="matches">Matches only</option><option value="nobody">Nobody</option></select></div></div></div><div className="rounded-2xl border border-border bg-card p-6"><div className="flex items-start gap-4"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/10 text-secondary"><Compass size={19} /></div><div className="flex-1"><h2 className="font-display text-xl">Discovery preferences</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">Set a range that feels spacious, not endless.</p><div className="mt-5 grid gap-4 sm:grid-cols-3"><Field label="Age from" type="number" min={18} {...form.register('ageMin', { valueAsNumber: true })} /><Field label="Age to" type="number" min={18} {...form.register('ageMax', { valueAsNumber: true })} /><Field label="Distance (mi)" type="number" min={1} {...form.register('maxDistanceMiles', { valueAsNumber: true })} /></div><Link href="/vibe-dna" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-secondary" data-testid="link-edit-preferences">Fine-tune your Vibe DNA <ArrowRight size={15} /></Link></div></div></div><div className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center"><div className="flex items-center gap-3">{saved ? <Check className="text-secondary" size={18} /> : <ShieldCheck className="text-primary" size={18} />}<span className="text-sm text-muted-foreground">{saved ? 'Your boundaries are saved.' : 'Only you can see these settings.'}</span></div><Button type="submit" disabled={update.isPending || updatePreferences.isPending} data-testid="button-save-settings">{update.isPending || updatePreferences.isPending ? 'Saving...' : 'Save settings'}</Button></div></form><div className="mt-14 border-t border-border pt-8"><p className="mb-4 font-mono-pulse text-[11px] uppercase tracking-[.18em] text-muted-foreground">Account controls</p><div className="grid gap-3 sm:grid-cols-2"><Button variant="outline" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="button-settings-logout"><LogOut size={17} /> Log out</Button><Button variant="danger" onClick={() => update.mutate({ data: { deleteRequested: true } })} data-testid="button-delete-account"><XCircle size={17} /> Request account deletion</Button></div><p className="mt-4 text-xs leading-5 text-muted-foreground">Account deletion requests are reviewed for safety. This action does not immediately remove your account.</p></div></div></AppShell>;
+  const confirmDelete = () => {
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
+    deleteAccount.mutate(undefined, {
+      onSuccess: () => navigate('/'),
+    });
+  };
+  return <AppShell><div className="mx-auto max-w-3xl animate-rise"><SectionHeading eyebrow="Settings / your boundaries" title="Keep what matters close." copy="PULSE should feel good to use. Adjust your visibility, preferences, and pace at any time." /><form onSubmit={form.handleSubmit(submit)} className="space-y-4"><SettingsToggle title="Discoverable" copy="Allow your profile to appear to people who match your preferences." field="discoverable" register={form.register} /><SettingsToggle title="Show my age" copy="Your age is visible on your public profile." field="showAge" register={form.register} /><SettingsToggle title="Show my region" copy="Share your region, never your exact location." field="showRegion" register={form.register} /><SettingsToggle title="Notifications" copy="Receive real-time in-app updates for Likes, Hearts, media activity, and matches." field="notificationsEnabled" register={form.register} /><div className="rounded-2xl border border-border bg-card p-5"><div className="flex items-start gap-4"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/10 text-secondary"><CircleHelp size={19} /></div><div className="flex-1"><h2 className="font-display text-xl">Who can comment?</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">Set the permission that protects your profile media conversations.</p><select {...form.register('commentPermission')} className="focus-ring mt-4 h-12 w-full rounded-xl border border-input bg-input px-4 text-sm text-foreground" data-testid="select-comment-permission"><option value="eligible">Eligible people</option><option value="verified">Verified people</option><option value="liked">People you have liked</option><option value="matches">Matches only</option><option value="nobody">Nobody</option></select></div></div></div><div className="rounded-2xl border border-border bg-card p-6"><div className="flex items-start gap-4"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/10 text-secondary"><Compass size={19} /></div><div className="flex-1"><h2 className="font-display text-xl">Discovery preferences</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">Set a range that feels spacious, not endless.</p><div className="mt-5 grid gap-4 sm:grid-cols-3"><Field label="Age from" type="number" min={18} {...form.register('ageMin', { valueAsNumber: true })} /><Field label="Age to" type="number" min={18} {...form.register('ageMax', { valueAsNumber: true })} /><Field label="Distance (mi)" type="number" min={1} {...form.register('maxDistanceMiles', { valueAsNumber: true })} /></div><Link href="/vibe-dna" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-secondary" data-testid="link-edit-preferences">Fine-tune your Vibe DNA <ArrowRight size={15} /></Link></div></div></div><div className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center"><div className="flex items-center gap-3">{saved ? <Check className="text-secondary" size={18} /> : <ShieldCheck className="text-primary" size={18} />}<span className="text-sm text-muted-foreground">{saved ? 'Your boundaries are saved.' : 'Only you can see these settings.'}</span></div><Button type="submit" disabled={update.isPending || updatePreferences.isPending} data-testid="button-save-settings">{update.isPending || updatePreferences.isPending ? 'Saving...' : 'Save settings'}</Button></div></form><div className="mt-14 border-t border-border pt-8"><p className="mb-4 font-mono-pulse text-[11px] uppercase tracking-[.18em] text-muted-foreground">Account controls</p><div className="grid gap-3 sm:grid-cols-2"><Button variant="outline" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="button-settings-logout"><LogOut size={17} /> Log out</Button><Button variant="danger" onClick={confirmDelete} disabled={deleteAccount.isPending} data-testid="button-delete-account"><XCircle size={17} /> {deleteAccount.isPending ? 'Deleting...' : deleteConfirm ? 'Confirm permanent deletion' : 'Delete my account'}</Button></div><p className="mt-4 text-xs leading-5 text-muted-foreground">{deleteConfirm ? 'This permanently removes your PULSE profile, media references, signals, matches, and notifications. Click again to confirm.' : 'Account deletion is permanent. Your PULSE data will be deleted immediately.'}</p></div></div></AppShell>;
 }
 
 function SettingsToggle({ title, copy, field, register }: { title: string; copy: string; field: keyof SettingsInput; register: ReturnType<typeof useForm<SettingsInput>>['register'] }) {
@@ -258,7 +456,7 @@ function ClerkCacheInvalidator() {
 function RoutedErrorBoundary({ children }: { children: ReactNode }) { const [location] = useLocation(); return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>; }
 
 function RouterContent() {
-  return <RoutedErrorBoundary><Switch><Route path="/" component={HomePage} /><Route path="/sign-in/*?" component={() => <AuthPage mode="sign-in" />} /><Route path="/sign-up/*?" component={() => <AuthPage mode="sign-up" />} /><Route path="/app" component={() => <AuthGate><UserPortal /></AuthGate>} /><Route path="/discover" component={() => <AuthGate><DiscoveryPage /></AuthGate>} /><Route path="/likes" component={() => <AuthGate><LikesPage /></AuthGate>} /><Route path="/vibe-dna" component={() => <AuthGate><VibeDnaPage /></AuthGate>} /><Route path="/profile" component={() => <AuthGate><ProfilePage /></AuthGate>} /><Route path="/settings" component={() => <AuthGate><SettingsPage /></AuthGate>} /><Route component={NotFound} /></Switch></RoutedErrorBoundary>;
+  return <RoutedErrorBoundary><Switch><Route path="/" component={HomePage} /><Route path="/sign-in/*?" component={() => <AuthPage mode="sign-in" />} /><Route path="/sign-up/*?" component={() => <AuthPage mode="sign-up" />} /><Route path="/app" component={() => <AuthGate><UserPortal /></AuthGate>} /><Route path="/discover" component={() => <AuthGate><DiscoveryPage /></AuthGate>} /><Route path="/likes" component={() => <AuthGate><LikesPage /></AuthGate>} /><Route path="/vibe-dna" component={() => <AuthGate><VibeDnaPage /></AuthGate>} /><Route path="/profile" component={() => <AuthGate><ProfilePageRepaired /></AuthGate>} /><Route path="/settings" component={() => <AuthGate><SettingsPage /></AuthGate>} /><Route component={NotFound} /></Switch></RoutedErrorBoundary>;
 }
 
 function AuthGate({ children }: { children: ReactNode }) {

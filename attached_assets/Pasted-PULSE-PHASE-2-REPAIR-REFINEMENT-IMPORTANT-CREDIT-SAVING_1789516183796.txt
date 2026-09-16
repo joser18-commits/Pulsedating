@@ -1,0 +1,254 @@
+PULSE — PHASE 2 REPAIR + REFINEMENT
+
+IMPORTANT CREDIT-SAVING INSTRUCTION:
+Do NOT rebuild, re-audit, re-explain, or redo Phase 1 or completed Phase 2 work. Preserve all working functionality and existing data. Focus ONLY on the fixes/refinements below.
+
+CRITICAL:
+Never remove, simplify, replace, disable, or break working PULSE features. Make additive/minimal changes.
+
+1. FIX VIBE DNA COMPLETION
+The “Finish Vibe DNA” button currently briefly reacts but does not complete onboarding.
+
+Find and fix the actual cause.
+After successful completion:
+- persist Vibe DNA
+- mark onboarding complete
+- give clear success feedback
+- continue to the correct next screen
+- prevent duplicate submissions
+
+2. FIX PROFILE PHOTO UPLOAD
+Profile photos can currently be selected but are not successfully saving/displaying.
+
+Fix:
+- upload
+- persistence
+- primary profile photo selection
+- authenticated media access
+- profile display
+- discovery display
+
+Show useful upload/error states.
+
+Do not expose private storage credentials or unsafe public media routes.
+
+3. CONVERT PROFILE FIELDS TO EASY SELECTION CONTROLS
+Users should NOT manually type information that can be standardized.
+
+Use dropdowns, chips, segmented controls, toggles, sliders, or multi-select controls where appropriate for:
+
+- age/date of birth
+- country
+- region/state/province
+- city
+- gender
+- height
+- relationship intention
+- family goals
+- lifestyle
+- marriage goals
+- children/wants children
+- home ownership goal
+- career goals
+- business goals
+- financial freedom
+- travel
+- education
+- relocation
+- would relocate for the right person
+- other structured Future Goals
+
+Keep “About Me” and optional custom 5-year vision text as free-text fields.
+
+Country → region → city selections should be logically dependent where supported.
+
+4. HEIGHT
+Make height easy to select.
+
+Support:
+- feet + inches
+- centimeters
+
+Allow user preference between imperial and metric.
+
+Store height in a normalized format so matching/filtering works regardless of display unit.
+
+5. DISCOVERY AGE + DISTANCE CONTROLS
+Age range should use a dual-range slider or similarly easy min/max control.
+
+Distance should use a simple selector/slider with practical options such as:
+5 / 10 / 25 / 50 / 100+ miles or equivalent kilometers.
+
+Country should use searchable selection rather than requiring manual typing.
+
+6. FIX NEARBY DISCOVERY
+Two test profiles can appear under Global but not Nearby even when the devices/users are physically near each other.
+
+Investigate and FIX the real Nearby filtering/location problem.
+
+Do not expose exact GPS positions.
+
+Nearby should use privacy-safe location data and gracefully handle users who only provided city/region rather than precise location.
+
+Do not fabricate nearby users.
+
+7. NORMAL DISCOVERY PHOTOS
+Normal Nearby and Global Discovery MUST show the primary profile picture clearly.
+
+Do NOT blur normal discovery photos.
+
+Photo blur is reserved for later experiences such as:
+- Blind Spark
+- Anonymous/Vibe Match
+- locked Who Liked Me previews
+
+First name should remain visible.
+
+8. CHANGE THE INTEREST SYSTEM
+Separate regular Likes from stronger Hearts.
+
+Create three levels:
+
+LIKE 👍/❤️ regular:
+- standard interest action
+- target approximately 30 free Likes per 24 hours
+- make allowance configurable
+
+HEART ❤️:
+- stronger signal
+- target 5 free Hearts per 24 hours
+- configurable
+
+SUPER PULSE 💜:
+- strongest signal
+- preserve existing architecture
+- future premium/earned feature
+
+Do NOT add payments yet.
+
+9. FREE INCOMING-LIKE PRIVACY
+Prepare the logic now but keep monetization/payment disabled during development.
+
+For a normal incoming LIKE:
+- free recipient receives notification that someone liked them
+- do NOT reveal who sent it through Who Liked Me
+- keep profile blurred/locked there
+
+If both users independently Like each other during normal discovery:
+- immediately create a mutual match
+- reveal both profiles
+- notify BOTH users
+- no payment required
+
+Future premium or rewarded-ad entitlement can reveal incoming Likes.
+
+HEART behavior should be treated as a stronger visible signal and remain architecturally distinct from normal Likes.
+
+Do NOT activate pricing, subscriptions, checkout, or rewarded ads yet.
+
+10. NOTIFICATION CENTER FOUNDATION
+Add a notification bell to the authenticated app header/navigation.
+
+Show an unread badge/red dot/count.
+
+Persist real notifications for events such as:
+- someone liked you
+- Heart received
+- mutual match
+- photo/video interaction
+- comment/reply
+
+Clicking the bell should open a notification list.
+
+Also add/prepare a separate Messages icon with unread-message badge for Phase 3.
+
+Do NOT fabricate notifications.
+
+11. MATCH NOTIFICATIONS
+When two users mutually Like each other:
+
+Notify BOTH users.
+
+Show:
+“IT’S A PULSE ❤️”
+“You felt it. They did too.”
+
+Both profiles should become visible to each other.
+
+Messaging remains disabled until Phase 3.
+
+12. “MISSED A MATCH”
+Prepare a gentle engagement event when appropriate if a user passes on someone who had previously liked them.
+
+Possible message:
+“You missed a potential match.”
+
+IMPORTANT:
+Do not reveal the hidden liker’s identity to a free user through this feature.
+Do not use fake urgency or deceptive notifications.
+Keep this configurable/disableable.
+
+13. DISCOVERY MODES
+Preserve the three modes but make their purposes distinct:
+
+NEARBY:
+Swipe/card-style discovery of nearby compatible users.
+
+GLOBAL:
+Browse/search users by country/region/city and worldwide.
+
+RIGHT NOW:
+Keep the existing safe empty/live-presence foundation for now.
+
+Do NOT build fake live users.
+
+Architect Right Now so a future phase can support opt-in:
+- live presence
+- live rooms
+- live video
+- live chat/reactions
+- opening a live user’s dating profile
+
+Do not implement full live streaming in this repair task.
+
+14. DELETE ACCOUNT
+Implement a REAL Delete Account option in Settings.
+
+Require confirmation/re-authentication where appropriate.
+
+Delete/anonymize user data according to proper privacy/safety retention rules.
+
+Do not make this merely hide the profile.
+
+15. VERIFY EXISTING MATCHING
+Do not rewrite matching if it already works.
+
+Verify:
+A Likes B
+B Likes A
+→ one mutual match
+→ both notified
+→ no duplicate match
+
+Also confirm:
+- media interactions persist
+- profile photos persist
+- Vibe DNA completion persists
+- Nearby works
+- Global still works
+- existing compatibility remains working
+- Phase 1 data remains intact
+
+Do NOT start Phase 3.
+Do NOT add payments.
+Do NOT add subscription prices.
+Do NOT integrate paid AI APIs.
+Do NOT rebuild completed systems.
+
+At completion, give me ONLY a concise report:
+1. Fixed
+2. Database/API changes
+3. Anything still failing
+4. What I should test manually
+
+Then STOP.

@@ -37,6 +37,7 @@ import type {
   MediaInteractionInput,
   MediaInteractionResponse,
   NotFoundResponse,
+  NotificationsResponse,
   OnboardingProgress,
   OnboardingProgressInput,
   Preferences,
@@ -896,6 +897,225 @@ export const useUpdateOnboardingProgress = <TError = ErrorType<UnauthorizedRespo
         TContext
       > => {
       return useMutation(getUpdateOnboardingProgressMutationOptions(options));
+    }
+
+export const getDeleteMyAccountUrl = () => {
+
+
+
+
+  return `/api/me/account`
+}
+
+/**
+ * @summary Permanently delete the signed-in user's account data
+ */
+export const deleteMyAccount = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteMyAccountUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMyAccountMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyAccount>>, TError,void, TContext> => {
+
+const mutationKey = ['deleteMyAccount'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyAccount>>, void> = () => {
+
+
+          return  deleteMyAccount(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyAccountMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyAccount>>>
+
+    export type DeleteMyAccountMutationError = ErrorType<UnauthorizedResponse>
+
+    /**
+ * @summary Permanently delete the signed-in user's account data
+ */
+export const useDeleteMyAccount = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyAccount>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteMyAccountMutationOptions(options));
+    }
+
+export const getGetMyNotificationsUrl = () => {
+
+
+
+
+  return `/api/me/notifications`
+}
+
+/**
+ * @summary Get the signed-in user's real notifications
+ */
+export const getMyNotifications = async ( options?: Parameters<typeof customFetch>[1]): Promise<NotificationsResponse> => {
+
+  return customFetch<NotificationsResponse>(getGetMyNotificationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyNotificationsQueryKey = () => {
+    return [
+    `/api/me/notifications`
+    ] as const;
+    }
+
+
+export const getGetMyNotificationsQueryOptions = <TData = Awaited<ReturnType<typeof getMyNotifications>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyNotifications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyNotificationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyNotifications>>> = ({ signal }) => getMyNotifications({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyNotifications>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyNotificationsQueryResult = NonNullable<Awaited<ReturnType<typeof getMyNotifications>>>
+export type GetMyNotificationsQueryError = ErrorType<UnauthorizedResponse>
+
+
+/**
+ * @summary Get the signed-in user's real notifications
+ */
+
+export function useGetMyNotifications<TData = Awaited<ReturnType<typeof getMyNotifications>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyNotifications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyNotificationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getMarkMyNotificationsReadUrl = () => {
+
+
+
+
+  return `/api/me/notifications/read`
+}
+
+/**
+ * @summary Mark the signed-in user's notifications as read
+ */
+export const markMyNotificationsRead = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getMarkMyNotificationsReadUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getMarkMyNotificationsReadMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markMyNotificationsRead>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markMyNotificationsRead>>, TError,void, TContext> => {
+
+const mutationKey = ['markMyNotificationsRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markMyNotificationsRead>>, void> = () => {
+
+
+          return  markMyNotificationsRead(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkMyNotificationsReadMutationResult = NonNullable<Awaited<ReturnType<typeof markMyNotificationsRead>>>
+
+    export type MarkMyNotificationsReadMutationError = ErrorType<UnauthorizedResponse>
+
+    /**
+ * @summary Mark the signed-in user's notifications as read
+ */
+export const useMarkMyNotificationsRead = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markMyNotificationsRead>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markMyNotificationsRead>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getMarkMyNotificationsReadMutationOptions(options));
     }
 
 export const getRequestUploadUrlUrl = () => {

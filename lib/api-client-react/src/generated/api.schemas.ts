@@ -67,6 +67,8 @@ export interface PublicProfile {
   country?: string | null;
   /** @nullable */
   region?: string | null;
+  /** @nullable */
+  city?: string | null;
   languages: string[];
   /** @nullable */
   relationshipIntention?: string | null;
@@ -119,6 +121,8 @@ export interface ProfileInput {
   country?: string | null;
   /** @nullable */
   region?: string | null;
+  /** @nullable */
+  city?: string | null;
   languages?: string[];
   /** @nullable */
   relationshipIntention?: string | null;
@@ -138,6 +142,8 @@ export interface ProfileInput {
   media?: ProfileMedia[];
   /** @nullable */
   voiceVibePath?: string | null;
+  /** @nullable */
+  exactBirthDate?: string | null;
 }
 
 export interface VibeDna {
@@ -334,12 +340,14 @@ export interface DiscoveryResponse {
   mode: string;
   profiles: DiscoveryProfile[];
   heartAllowance: HeartAllowance;
+  likeAllowance: HeartAllowance;
 }
 
 export type HeartInputKind = typeof HeartInputKind[keyof typeof HeartInputKind];
 
 
 export const HeartInputKind = {
+  like: 'like',
   heart: 'heart',
   super_pulse: 'super_pulse',
 } as const;
@@ -370,6 +378,8 @@ export interface HeartResponse {
   refillAt: string;
   matched: boolean;
   match: Match | null;
+  likeAllowance: HeartAllowance;
+  heartAllowance: HeartAllowance;
 }
 
 export interface BlurredLikePreview {
@@ -464,6 +474,24 @@ export interface CommentActionInput {
 export interface CommentActionResponse {
   comment: MediaComment;
   matched: boolean;
+}
+
+export type NotificationPayload = { [key: string]: unknown };
+
+export interface Notification {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  payload: NotificationPayload;
+  /** @nullable */
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  unreadCount: number;
+  notifications: Notification[];
 }
 
 /**

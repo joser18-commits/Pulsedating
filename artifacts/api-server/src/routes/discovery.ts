@@ -30,6 +30,7 @@ import {
   pulseMatches,
   pulseMediaComments,
   pulseMediaLikes,
+  pulseNotifications,
   pulsePreferences,
   pulseProfiles,
   pulseSettings,
@@ -42,7 +43,8 @@ import { requireAuth, type AuthenticatedRequest } from "../middlewares/auth";
 const router: IRouter = Router();
 router.use(requireAuth);
 
-const FREE_HEART_LIMIT = Number(process.env.PULSE_FREE_HEART_LIMIT ?? 10);
+const FREE_LIKE_LIMIT = Number(process.env.PULSE_FREE_LIKE_LIMIT ?? 30);
+const FREE_HEART_LIMIT = Number(process.env.PULSE_FREE_HEART_LIMIT ?? 5);
 const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 const RECENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const NEW_USER_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
@@ -110,6 +112,7 @@ function toDiscoveryProfile(candidate: Candidate, viewerId: string, mediaLikedBy
     heightCm: candidate.profile.heightCm,
     country: candidate.profile.country,
     region: candidate.profile.region,
+    city: candidate.profile.city,
     languages: candidate.profile.languages ?? [],
     relationshipIntention: candidate.profile.relationshipIntention,
     aboutMe: candidate.profile.aboutMe,
@@ -258,20 +261,34 @@ async function blockedBetween(viewerId: string, candidateId: string) {
     (await db.select().from(pulseBlocks).where(eq(pulseBlocks.blockerId, candidateId))).some((row) => row.blockedId === viewerId);
 }
 
-async function heartAllowance(userId: string) {
+async function signalAllowance(userId: string, kind: "like" | "heart", limit: number) {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const recent = await db
     .select()
     .from(pulseHearts)
     .where(eq(pulseHearts.fromUserId, userId));
-  const hearts = recent
-    .filter((heart) => heart.kind === "heart" && heart.createdAt >= since)
+  const signals = recent
+    .filter((heart) => heart.kind === kind && heart.createdAt >= since)
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  const remaining = Math.max(0, FREE_HEART_LIMIT - hearts.length);
-  const refillAt = hearts[0]?.createdAt
-    ? new Date(hearts[0].createdAt.getTime() + 24 * 60 * 60 * 1000)
+  const remaining = Math.max(0, limit - signals.length);
+  const refillAt = signals[0]?.createdAt
+    ? new Date(signals[0].createdAt.getTime() + 24 * 60 * 60 * 1000)
     : new Date(Date.now() + 24 * 60 * 60 * 1000);
-  return { remaining, limit: FREE_HEART_LIMIT, refillAt };
+  return { remaining, limit, refillAt };
+}
+
+async function likeAllowance(userId: string) {
+  return signalAllowance(userId, "like", FREE_LIKE_LIMIT);
+}
+
+async function heartAllowance(userId: string) {
+  return signalAllowance(userId, "heart", FREE_HEART_LIMIT);
+}
+
+async function notify(userId: string, kind: string, payload: Record<string, unknown>) {
+  const [settings] = await db.select().from(pulseSettings).where(eq(pulseSettings.clerkUserId, userId));
+  if (settings?.notificationsEnabled === false) return;
+  await db.insert(pulseNotifications).values({ id: randomUUID(), userId, kind, payload });
 }
 
 function pairKey(left: string, right: string) {
@@ -289,12 +306,25 @@ async function createMatchIfMutual(fromUserId: string, toUserId: string) {
     .from(pulseHearts)
     .where(and(eq(pulseHearts.fromUserId, toUserId), eq(pulseHearts.toUserId, fromUserId)));
   if (reverse.length === 0) return null;
+  const existing = await matchForUsers(fromUserId, toUserId);
+  if (existing) return existing;
   const key = pairKey(fromUserId, toUserId);
   await db
     .insert(pulseMatches)
     .values({ id: randomUUID(), userAId: fromUserId, userBId: toUserId, pairKey: key })
     .onConflictDoNothing({ target: pulseMatches.pairKey });
-  return matchForUsers(fromUserId, toUserId);
+  const match = await matchForUsers(fromUserId, toUserId);
+  if (match) {
+    const [fromProfile, toProfile] = await Promise.all([
+      db.select().from(pulseProfiles).where(eq(pulseProfiles.clerkUserId, fromUserId)),
+      db.select().from(pulseProfiles).where(eq(pulseProfiles.clerkUserId, toUserId)),
+    ]);
+    await Promise.all([
+      notify(fromUserId, "match", { firstName: toProfile[0]?.firstName ?? "your match", matchId: match.id }),
+      notify(toUserId, "match", { firstName: fromProfile[0]?.firstName ?? "your match", matchId: match.id }),
+    ]);
+  }
+  return match;
 }
 
 async function matchResponse(match: typeof pulseMatches.$inferSelect | null | undefined, viewerId: string) {
@@ -380,9 +410,14 @@ router.post("/discover", async (req, res): Promise<void> => {
   const [preferences] = await db.select().from(pulsePreferences).where(eq(pulsePreferences.clerkUserId, viewerId));
   const filters = parsed.data;
   const mode = filters.mode;
-  const allowance = await heartAllowance(viewerId);
+  const [allowance, likes] = await Promise.all([heartAllowance(viewerId), likeAllowance(viewerId)]);
   if (mode === "right-now") {
-    res.json(GetDiscoveryResponse.parse({ mode, profiles: [], heartAllowance: { ...allowance, refillAt: allowance.refillAt.toISOString() } }));
+    res.json(GetDiscoveryResponse.parse({
+      mode,
+      profiles: [],
+      heartAllowance: { ...allowance, refillAt: allowance.refillAt.toISOString() },
+      likeAllowance: { ...likes, refillAt: likes.refillAt.toISOString() },
+    }));
     return;
   }
 
@@ -419,7 +454,11 @@ router.post("/discover", async (req, res): Promise<void> => {
     if (profile.age < requestedAgeMin || profile.age > requestedAgeMax) continue;
     if (mode === "nearby" && !filters.worldwide && approximateDistance(viewer, candidate) > requestedDistance) continue;
     if (filters.gender && criterionFor(filters.criteria, "gender") === "required" && lower(profile.gender) !== lower(filters.gender)) continue;
-    if (filters.city && criterionFor(filters.criteria, "city") === "required" && !lower(profile.region).includes(lower(filters.city))) continue;
+    if (
+      filters.city &&
+      criterionFor(filters.criteria, "city") === "required" &&
+      ![profile.city, profile.region].filter(Boolean).some((value) => lower(value).includes(lower(filters.city)))
+    ) continue;
     if (filters.country && criterionFor(filters.criteria, "country") === "required" && lower(profile.country) !== lower(filters.country)) continue;
     if (filters.verified && !(account.emailVerified || account.ageVerified || account.identityVerified)) continue;
     if (filters.newUsers && account.createdAt.getTime() < Date.now() - NEW_USER_WINDOW_MS) continue;
@@ -456,6 +495,7 @@ router.post("/discover", async (req, res): Promise<void> => {
     mode,
     profiles: results,
     heartAllowance: { ...allowance, refillAt: allowance.refillAt.toISOString() },
+    likeAllowance: { ...likes, refillAt: likes.refillAt.toISOString() },
   }));
 });
 
@@ -472,20 +512,56 @@ router.post("/discover/heart", async (req, res): Promise<void> => {
     return;
   }
   const existing = await db.select().from(pulseHearts).where(and(eq(pulseHearts.fromUserId, viewerId), eq(pulseHearts.toUserId, toUserId), eq(pulseHearts.kind, kind)));
-  const allowance = await heartAllowance(viewerId);
+  const [heartLimit, likeLimit] = await Promise.all([heartAllowance(viewerId), likeAllowance(viewerId)]);
   if (existing[0]) {
     const match = await createMatchIfMutual(viewerId, toUserId);
-    res.json(SendHeartResponse.parse({ heartId: existing[0].id, kind, ...allowance, refillAt: allowance.refillAt.toISOString(), matched: Boolean(match), match: await matchResponse(match, viewerId) }));
+    const allowance = kind === "like" ? likeLimit : heartLimit;
+    res.json(SendHeartResponse.parse({
+      heartId: existing[0].id,
+      kind,
+      ...allowance,
+      refillAt: allowance.refillAt.toISOString(),
+      matched: Boolean(match),
+      match: await matchResponse(match, viewerId),
+      likeAllowance: { ...likeLimit, refillAt: likeLimit.refillAt.toISOString() },
+      heartAllowance: { ...heartLimit, refillAt: heartLimit.refillAt.toISOString() },
+    }));
     return;
   }
-  if (kind === "heart" && allowance.remaining <= 0) {
-    res.status(429).json(SendHeartResponse.parse({ heartId: null, kind, ...allowance, refillAt: allowance.refillAt.toISOString(), matched: false, match: null }));
+  const allowance = kind === "like" ? likeLimit : heartLimit;
+  if ((kind === "heart" || kind === "like") && allowance.remaining <= 0) {
+    res.status(429).json(SendHeartResponse.parse({
+      heartId: null,
+      kind,
+      ...allowance,
+      refillAt: allowance.refillAt.toISOString(),
+      matched: false,
+      match: null,
+      likeAllowance: { ...likeLimit, refillAt: likeLimit.refillAt.toISOString() },
+      heartAllowance: { ...heartLimit, refillAt: heartLimit.refillAt.toISOString() },
+    }));
     return;
   }
   const [heart] = await db.insert(pulseHearts).values({ id: randomUUID(), fromUserId: viewerId, toUserId, kind }).returning();
+  const [sender] = await Promise.all([
+    db.select().from(pulseProfiles).where(eq(pulseProfiles.clerkUserId, viewerId)),
+  ]);
+  await notify(toUserId, kind === "like" ? "like_received" : kind === "heart" ? "heart_received" : "super_pulse_received", {
+    firstName: sender[0]?.firstName ?? "Someone",
+    signalId: heart.id,
+  });
   const match = await createMatchIfMutual(viewerId, toUserId);
-  const nextAllowance = await heartAllowance(viewerId);
-  res.json(SendHeartResponse.parse({ heartId: heart.id, kind, ...nextAllowance, refillAt: nextAllowance.refillAt.toISOString(), matched: Boolean(match), match: await matchResponse(match, viewerId) }));
+  const [nextHeartAllowance, nextLikeAllowance] = await Promise.all([heartAllowance(viewerId), likeAllowance(viewerId)]);
+  res.json(SendHeartResponse.parse({
+    heartId: heart.id,
+    kind,
+    ...(kind === "like" ? nextLikeAllowance : nextHeartAllowance),
+    refillAt: (kind === "like" ? nextLikeAllowance : nextHeartAllowance).refillAt.toISOString(),
+    matched: Boolean(match),
+    match: await matchResponse(match, viewerId),
+    likeAllowance: { ...nextLikeAllowance, refillAt: nextLikeAllowance.refillAt.toISOString() },
+    heartAllowance: { ...nextHeartAllowance, refillAt: nextHeartAllowance.refillAt.toISOString() },
+  }));
 });
 
 router.get("/me/matches", async (req, res): Promise<void> => {
@@ -503,8 +579,8 @@ router.get("/me/matches", async (req, res): Promise<void> => {
 router.get("/me/likes", async (req, res): Promise<void> => {
   const viewerId = userIdOf(req);
   const likes = await db.select().from(pulseHearts).where(eq(pulseHearts.toUserId, viewerId));
-  const uniqueLikeUsers = [...new Map(likes.filter((like) => like.kind === "heart").map((like) => [like.fromUserId, like])).values()];
-  const previews = await Promise.all(uniqueLikeUsers.slice(0, 24).map(async (like) => {
+  const uniqueLikeUsers = [...new Map(likes.map((like) => [like.fromUserId, like])).values()];
+  const previews = await Promise.all(uniqueLikeUsers.filter((like) => like.kind !== "like").slice(0, 24).map(async (like) => {
     const [profile] = await db.select().from(pulseProfiles).where(eq(pulseProfiles.clerkUserId, like.fromUserId));
     const photo = profile?.media.find((item) => item.kind === "photo");
     return {
@@ -543,6 +619,10 @@ router.post("/discover/media/:mediaId/interaction", async (req, res): Promise<vo
     }
   } else {
     await db.insert(pulseMediaLikes).values({ id: randomUUID(), mediaId: params.data.mediaId, userId: viewerId, reaction });
+    if (found.profile.clerkUserId !== viewerId) {
+      const [sender] = await db.select().from(pulseProfiles).where(eq(pulseProfiles.clerkUserId, viewerId));
+      await notify(found.profile.clerkUserId, "media_interaction", { firstName: sender?.firstName ?? "Someone", mediaId: params.data.mediaId });
+    }
   }
   res.json(InteractWithMediaResponse.parse({ mediaId: params.data.mediaId, kind: body.data.kind, reaction: active ? reaction : null, active }));
 });
@@ -591,6 +671,10 @@ router.post("/discover/media/:mediaId/comments", async (req, res): Promise<void>
     body: body.data.body.trim(),
     replyToId: body.data.replyToId ?? null,
   }).returning();
+  if (found.profile.clerkUserId !== viewerId) {
+    const [sender] = await db.select().from(pulseProfiles).where(eq(pulseProfiles.clerkUserId, viewerId));
+    await notify(found.profile.clerkUserId, "media_comment", { firstName: sender?.firstName ?? "Someone", mediaId: params.data.mediaId });
+  }
   res.status(201).json(CreateMediaCommentResponse.parse(await commentResponse(comment, viewerId)));
 });
 

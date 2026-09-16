@@ -27,6 +27,8 @@ export interface ProfileInput {
   country?: string | null;
   /** @nullable */
   region?: string | null;
+  /** @nullable */
+  city?: string | null;
   languages?: string[];
   /** @nullable */
   relationshipIntention?: string | null;
@@ -46,4 +48,6 @@ export interface ProfileInput {
   media?: ProfileMedia[];
   /** @nullable */
   voiceVibePath?: string | null;
+  /** @nullable */
+  exactBirthDate?: string | null;
 }

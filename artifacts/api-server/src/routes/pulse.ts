@@ -1,7 +1,8 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import {
   GetMyPreferencesResponse,
+  GetMyNotificationsResponse,
   GetMyProfileResponse,
   GetMySettingsResponse,
   GetMySummaryResponse,
@@ -22,10 +23,19 @@ import {
 import {
   db,
   pulseAccounts,
+  pulseBlocks,
+  pulseHearts,
+  pulseMatches,
+  pulseMediaComments,
+  pulseMediaLikes,
+  pulseMessages,
+  pulseNotifications,
   pulseOnboarding,
   pulsePreferences,
   pulseProfiles,
+  pulseReports,
   pulseSettings,
+  pulseSubscriptions,
   pulseVibeDna,
 } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest } from "../middlewares/auth";
@@ -56,6 +66,7 @@ function toPublicProfile(row: typeof pulseProfiles.$inferSelect) {
     heightCm: row.heightCm,
     country: row.country,
     region: row.region,
+    city: row.city,
     languages: row.languages ?? [],
     relationshipIntention: row.relationshipIntention,
     aboutMe: row.aboutMe,
@@ -122,9 +133,8 @@ router.get("/me/summary", async (req, res): Promise<void> => {
       profileCompletion,
       onboardingComplete: row?.complete ?? false,
       profile: toPublicProfile(profile),
-      locationLabel: profile.region && profile.country
-        ? `${profile.region}, ${profile.country}`
-        : profile.country,
+      locationLabel:
+        [profile.city, profile.region, profile.country].filter(Boolean).join(", ") || null,
     }),
   );
 });
@@ -289,6 +299,84 @@ router.put("/me/onboarding", async (req, res): Promise<void> => {
     })
     .returning();
   res.json(UpdateOnboardingProgressResponse.parse(row));
+});
+
+function notificationCopy(kind: string, payload: Record<string, unknown> | null) {
+  const name = typeof payload?.firstName === "string" ? payload.firstName : "Someone";
+  if (kind === "match") return { title: "It’s a mutual signal", body: `You and ${name} matched.` };
+  if (kind === "heart_received") return { title: "You received a Heart", body: `${name} sent you a Heart.` };
+  if (kind === "super_pulse_received") return { title: "You received a Super Pulse", body: `${name} sent you a Super Pulse.` };
+  if (kind === "like_received") return { title: "Someone liked your profile", body: "A new Like is waiting in your private notifications." };
+  if (kind === "media_interaction") return { title: "Someone reacted to your media", body: `${name} interacted with something you shared.` };
+  if (kind === "media_comment") return { title: "New profile comment", body: `${name} left a comment on your media.` };
+  return { title: "New PULSE activity", body: "There is new activity in your private space." };
+}
+
+function toNotification(row: typeof pulseNotifications.$inferSelect) {
+  const copy = notificationCopy(row.kind, row.payload);
+  return {
+    id: row.id,
+    kind: row.kind,
+    title: copy.title,
+    body: copy.body,
+    payload: row.payload ?? {},
+    readAt: row.readAt,
+    createdAt: row.createdAt,
+  };
+}
+
+router.get("/me/notifications", async (req, res): Promise<void> => {
+  const userId = (req as AuthenticatedRequest).userId;
+  const rows = await db
+    .select()
+    .from(pulseNotifications)
+    .where(eq(pulseNotifications.userId, userId))
+    .orderBy(desc(pulseNotifications.createdAt))
+    .limit(50);
+  res.json(GetMyNotificationsResponse.parse({
+    unreadCount: rows.filter((row) => !row.readAt).length,
+    notifications: rows.map(toNotification),
+  }));
+});
+
+router.post("/me/notifications/read", async (req, res): Promise<void> => {
+  await db
+    .update(pulseNotifications)
+    .set({ readAt: new Date() })
+    .where(eq(pulseNotifications.userId, (req as AuthenticatedRequest).userId));
+  res.status(204).send();
+});
+
+router.delete("/me/account", async (req, res): Promise<void> => {
+  const userId = (req as AuthenticatedRequest).userId;
+  const profile = await db
+    .select({ media: pulseProfiles.media })
+    .from(pulseProfiles)
+    .where(eq(pulseProfiles.clerkUserId, userId));
+  const mediaIds = (profile[0]?.media ?? []).map((item) => item.id);
+  if (mediaIds.length > 0) {
+    await db.delete(pulseMediaLikes).where(inArray(pulseMediaLikes.mediaId, mediaIds));
+    await db.delete(pulseMediaComments).where(inArray(pulseMediaComments.mediaId, mediaIds));
+  }
+  await db.delete(pulseMediaLikes).where(eq(pulseMediaLikes.userId, userId));
+  await db.delete(pulseMediaComments).where(eq(pulseMediaComments.userId, userId));
+  await db.delete(pulseNotifications).where(eq(pulseNotifications.userId, userId));
+  await db.delete(pulseHearts).where(or(eq(pulseHearts.fromUserId, userId), eq(pulseHearts.toUserId, userId)));
+  const matches = await db.select({ id: pulseMatches.id }).from(pulseMatches).where(or(eq(pulseMatches.userAId, userId), eq(pulseMatches.userBId, userId)));
+  const matchIds = matches.map((match) => match.id);
+  await db.delete(pulseMessages).where(eq(pulseMessages.senderId, userId));
+  if (matchIds.length > 0) await db.delete(pulseMessages).where(inArray(pulseMessages.matchId, matchIds));
+  await db.delete(pulseMatches).where(or(eq(pulseMatches.userAId, userId), eq(pulseMatches.userBId, userId)));
+  await db.delete(pulseBlocks).where(or(eq(pulseBlocks.blockerId, userId), eq(pulseBlocks.blockedId, userId)));
+  await db.delete(pulseReports).where(or(eq(pulseReports.reporterId, userId), eq(pulseReports.reportedId, userId)));
+  await db.delete(pulseSubscriptions).where(eq(pulseSubscriptions.userId, userId));
+  await db.delete(pulseVibeDna).where(eq(pulseVibeDna.clerkUserId, userId));
+  await db.delete(pulseOnboarding).where(eq(pulseOnboarding.clerkUserId, userId));
+  await db.delete(pulsePreferences).where(eq(pulsePreferences.clerkUserId, userId));
+  await db.delete(pulseSettings).where(eq(pulseSettings.clerkUserId, userId));
+  await db.delete(pulseProfiles).where(eq(pulseProfiles.clerkUserId, userId));
+  await db.delete(pulseAccounts).where(eq(pulseAccounts.clerkUserId, userId));
+  res.status(204).send();
 });
 
 export default router;

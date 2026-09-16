@@ -206,6 +206,40 @@ paths:
                 $ref: "#/components/schemas/OnboardingProgress"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /me/account:
+    delete:
+      operationId: deleteMyAccount
+      tags: [settings]
+      summary: Permanently delete the signed-in user's account data
+      responses:
+        "204":
+          description: Account data deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /me/notifications:
+    get:
+      operationId: getMyNotifications
+      tags: [settings]
+      summary: Get the signed-in user's real notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /me/notifications/read:
+    post:
+      operationId: markMyNotificationsRead
+      tags: [settings]
+      summary: Mark the signed-in user's notifications as read
+      responses:
+        "204":
+          description: Notifications marked as read
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
@@ -521,6 +555,8 @@ components:
           type: ["string", "null"]
         region:
           type: ["string", "null"]
+        city:
+          type: ["string", "null"]
         languages:
           type: array
           items:
@@ -578,6 +614,8 @@ components:
           type: ["string", "null"]
         region:
           type: ["string", "null"]
+        city:
+          type: ["string", "null"]
         languages:
           type: array
           items:
@@ -606,6 +644,8 @@ components:
           items:
             $ref: "#/components/schemas/ProfileMedia"
         voiceVibePath:
+          type: ["string", "null"]
+        exactBirthDate:
           type: ["string", "null"]
     FutureGoals:
       type: object
@@ -884,7 +924,9 @@ components:
             $ref: "#/components/schemas/DiscoveryProfile"
         heartAllowance:
           $ref: "#/components/schemas/HeartAllowance"
-      required: [mode, profiles, heartAllowance]
+        likeAllowance:
+          $ref: "#/components/schemas/HeartAllowance"
+      required: [mode, profiles, heartAllowance, likeAllowance]
     DiscoveryProfile:
       allOf:
         - $ref: "#/components/schemas/PublicProfile"
@@ -930,7 +972,7 @@ components:
           type: string
         kind:
           type: string
-          enum: [heart, super_pulse]
+          enum: [like, heart, super_pulse]
     HeartResponse:
       type: object
       properties:
@@ -951,7 +993,11 @@ components:
           allOf:
             - $ref: "#/components/schemas/Match"
           nullable: true
-      required: [heartId, kind, remaining, limit, refillAt, matched, match]
+        likeAllowance:
+          $ref: "#/components/schemas/HeartAllowance"
+        heartAllowance:
+          $ref: "#/components/schemas/HeartAllowance"
+      required: [heartId, kind, remaining, limit, refillAt, matched, match, likeAllowance, heartAllowance]
     Match:
       type: object
       properties:
@@ -1066,4 +1112,35 @@ components:
         matched:
           type: boolean
       required: [comment, matched]
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+        readAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, kind, title, body, payload, readAt, createdAt]
+    NotificationsResponse:
+      type: object
+      properties:
+        unreadCount:
+          type: integer
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+      required: [unreadCount, notifications]
 

@@ -31,6 +31,7 @@ export const pulseProfiles = pgTable("pulse_profiles", {
   heightCm: integer("height_cm"),
   country: varchar("country", { length: 120 }),
   region: varchar("region", { length: 160 }),
+  city: varchar("city", { length: 160 }),
   languages: jsonb("languages").$type<string[]>().notNull().default([]),
   relationshipIntention: varchar("relationship_intention", { length: 120 }),
   aboutMe: text("about_me"),

@@ -20,6 +20,8 @@ export interface PublicProfile {
   country?: string | null;
   /** @nullable */
   region?: string | null;
+  /** @nullable */
+  city?: string | null;
   languages: string[];
   /** @nullable */
   relationshipIntention?: string | null;

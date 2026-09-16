@@ -31,6 +31,7 @@ export const GetMySummaryResponse = zod.object({
   "heightCm": zod.number().int().nullish(),
   "country": zod.string().nullish(),
   "region": zod.string().nullish(),
+  "city": zod.string().nullish(),
   "languages": zod.array(zod.string()),
   "relationshipIntention": zod.string().nullish(),
   "aboutMe": zod.string().nullish(),
@@ -75,6 +76,7 @@ export const GetMyProfileResponse = zod.object({
   "heightCm": zod.number().int().nullish(),
   "country": zod.string().nullish(),
   "region": zod.string().nullish(),
+  "city": zod.string().nullish(),
   "languages": zod.array(zod.string()),
   "relationshipIntention": zod.string().nullish(),
   "aboutMe": zod.string().nullish(),
@@ -128,6 +130,7 @@ export const UpdateMyProfileBody = zod.object({
   "heightCm": zod.number().int().nullish(),
   "country": zod.string().nullish(),
   "region": zod.string().nullish(),
+  "city": zod.string().nullish(),
   "languages": zod.array(zod.string()).optional(),
   "relationshipIntention": zod.string().nullish(),
   "aboutMe": zod.string().nullish(),
@@ -156,7 +159,8 @@ export const UpdateMyProfileBody = zod.object({
   "alt": zod.string().nullish(),
   "sortOrder": zod.number().int()
 })).max(updateMyProfileBodyMediaMax).optional(),
-  "voiceVibePath": zod.string().nullish()
+  "voiceVibePath": zod.string().nullish(),
+  "exactBirthDate": zod.string().nullish()
 })
 
 export const UpdateMyProfileResponse = zod.object({
@@ -167,6 +171,7 @@ export const UpdateMyProfileResponse = zod.object({
   "heightCm": zod.number().int().nullish(),
   "country": zod.string().nullish(),
   "region": zod.string().nullish(),
+  "city": zod.string().nullish(),
   "languages": zod.array(zod.string()),
   "relationshipIntention": zod.string().nullish(),
   "aboutMe": zod.string().nullish(),
@@ -333,6 +338,35 @@ export const UpdateOnboardingProgressResponse = zod.object({
 
 
 /**
+ * @summary Permanently delete the signed-in user's account data
+ */
+export const DeleteMyAccountResponse = zod.void()
+
+
+/**
+ * @summary Get the signed-in user's real notifications
+ */
+export const GetMyNotificationsResponse = zod.object({
+  "unreadCount": zod.number().int(),
+  "notifications": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "readAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Mark the signed-in user's notifications as read
+ */
+export const MarkMyNotificationsReadResponse = zod.void()
+
+
+/**
  * @summary Request a private upload URL for profile media
  */
 
@@ -387,6 +421,7 @@ export const GetDiscoveryResponse = zod.object({
   "heightCm": zod.number().int().nullish(),
   "country": zod.string().nullish(),
   "region": zod.string().nullish(),
+  "city": zod.string().nullish(),
   "languages": zod.array(zod.string()),
   "relationshipIntention": zod.string().nullish(),
   "aboutMe": zod.string().nullish(),
@@ -428,6 +463,11 @@ export const GetDiscoveryResponse = zod.object({
   "remaining": zod.number().int(),
   "limit": zod.number().int(),
   "refillAt": zod.coerce.date()
+}),
+  "likeAllowance": zod.object({
+  "remaining": zod.number().int(),
+  "limit": zod.number().int(),
+  "refillAt": zod.coerce.date()
 })
 })
 
@@ -437,7 +477,7 @@ export const GetDiscoveryResponse = zod.object({
  */
 export const SendHeartBody = zod.object({
   "toUserId": zod.string(),
-  "kind": zod.enum(['heart', 'super_pulse'])
+  "kind": zod.enum(['like', 'heart', 'super_pulse'])
 })
 
 export const SendHeartResponse = zod.object({
@@ -455,7 +495,17 @@ export const SendHeartResponse = zod.object({
   "region": zod.string().nullish(),
   "country": zod.string().nullish(),
   "createdAt": zod.coerce.date()
-}).nullable()
+}).nullable(),
+  "likeAllowance": zod.object({
+  "remaining": zod.number().int(),
+  "limit": zod.number().int(),
+  "refillAt": zod.coerce.date()
+}),
+  "heartAllowance": zod.object({
+  "remaining": zod.number().int(),
+  "limit": zod.number().int(),
+  "refillAt": zod.coerce.date()
+})
 })
 
 

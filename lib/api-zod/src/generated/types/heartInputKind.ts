@@ -10,6 +10,7 @@ export type HeartInputKind = typeof HeartInputKind[keyof typeof HeartInputKind];
 
 
 export const HeartInputKind = {
+  like: 'like',
   heart: 'heart',
   super_pulse: 'super_pulse',
 } as const;

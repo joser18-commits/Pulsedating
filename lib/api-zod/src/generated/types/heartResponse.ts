@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { HeartAllowance } from './heartAllowance';
 import type { Match } from './match';
 
 export interface HeartResponse {
@@ -16,4 +17,6 @@ export interface HeartResponse {
   refillAt: Date;
   matched: boolean;
   match: Match | null;
+  likeAllowance: HeartAllowance;
+  heartAllowance: HeartAllowance;
 }
